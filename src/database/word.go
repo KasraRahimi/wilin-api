@@ -105,3 +105,30 @@ func (dao *WordDao) ReadWordById(id int) (WordModel, error) {
 	}
 	return word, nil
 }
+
+func (dao *WordDao) DeleteWord(word *WordModel) error {
+	return dao.DeleteWordById(word.Id)
+}
+
+func (dao *WordDao) DeleteWordById(id int) error {
+	conn, err := GetConnection()
+	if err != nil {
+		return fmt.Errorf("DeleteWordById, failed at getting database connection: %w", err)
+	}
+
+	result, err := conn.Exec("DELETE FROM words WHERE id=?", id)
+	if err != nil {
+		return fmt.Errorf("DeleteWordById, failed at deleting word: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("DeleteWordById, failed to check rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("DeleteWordById, no rows were deleted (row with id %d does not exist): %w", id, sql.ErrNoRows)
+	}
+
+	return nil
+}

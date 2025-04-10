@@ -16,5 +16,6 @@ func New() *gin.Engine {
 	router.GET("/kalan", server.HandleGetKalan)
 	router.GET("/kalan/:id", server.HandleGetKalanById)
 	router.POST("/kalan", server.HandlePostKalan)
+	router.DELETE("/kalan/:id", server.HandleDeleteKalan)
 	return router
 }
