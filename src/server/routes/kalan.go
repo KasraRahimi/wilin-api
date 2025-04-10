@@ -53,8 +53,8 @@ func (s *Server) HandleGetKalanById(ctx *gin.Context) {
 		ctx.String(http.StatusBadRequest, "Badly formatted id")
 		return
 	}
+
 	word, err := s.WordDao.ReadWordById(id)
-	// TODO: make this better for out of scope id
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			ctx.Error(err)
@@ -86,4 +86,25 @@ func (s *Server) HandlePostKalan(ctx *gin.Context) {
 
 	kalanJson.ID = int(id)
 	ctx.JSON(http.StatusCreated, kalanJson)
+}
+
+func (s *Server) HandleDeleteKalan(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.String(http.StatusBadRequest, "Badly formatted id")
+		return
+	}
+
+	err = s.WordDao.DeleteWordById(id)
+	if err != nil {
+		ctx.Error(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.String(http.StatusNotFound, "Cannot find word with id=%d", id)
+			return
+		}
+		ctx.String(http.StatusInternalServerError, "Something went wrong deleting the word")
+		return
+	}
+
+	ctx.Status(http.StatusOK)
 }
