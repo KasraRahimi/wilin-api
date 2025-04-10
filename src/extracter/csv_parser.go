@@ -50,7 +50,7 @@ func AddWordsToDatabase(fileName string) error {
 
 	dao := database.WordDao{}
 	for _, word := range words {
-		err := dao.CreateWord(&word)
+		_, err := dao.CreateWord(&word)
 		if err != nil {
 			return fmt.Errorf("main, failed to add word \"%s\": %w", word.Entry, err)
 		}

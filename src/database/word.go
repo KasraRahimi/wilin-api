@@ -47,21 +47,25 @@ func (dao *WordDao) scanRows(rows *sql.Rows) (WordModel, error) {
 	return word, nil
 }
 
-func (dao *WordDao) CreateWord(word *WordModel) error {
+func (dao *WordDao) CreateWord(word *WordModel) (int64, error) {
 	conn, err := GetConnection()
 	if err != nil {
-		return fmt.Errorf("CreateWord, failed at getting database connection: %w", err)
+		return -1, fmt.Errorf("CreateWord, failed at getting database connection: %w", err)
 	}
 	defer conn.Close()
 
-	_, err = conn.Exec(`
+	result, err := conn.Exec(`
 	INSERT INTO words (entry, pos, gloss, notes)
 	VALUES (?, ?, ?, ?)
 	`, word.Entry, word.Pos, word.Gloss, word.Notes)
 	if err != nil {
-		return fmt.Errorf("CreateWord, failed inserting word into database: %w", err)
+		return -1, fmt.Errorf("CreateWord, failed inserting word into database: %w", err)
 	}
-	return nil
+	id, err := result.LastInsertId()
+	if err != nil {
+		return -1, fmt.Errorf("CreateWord, failed at fetching last insert id: %w", err)
+	}
+	return id, nil
 }
 
 func (dao *WordDao) ReadAllWords() ([]WordModel, error) {
