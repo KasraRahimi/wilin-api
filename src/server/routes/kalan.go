@@ -11,7 +11,7 @@ import (
 )
 
 type WilinWordJson struct {
-	ID    int    `json:"id"`
+	ID    int    `json:"id,omitempty"`
 	Entry string `json:"entry"`
 	Pos   string `json:"pos"`
 	Gloss string `json:"gloss"`
@@ -20,6 +20,16 @@ type WilinWordJson struct {
 
 func getJsonFromWordModel(word *database.WordModel) WilinWordJson {
 	return WilinWordJson{word.Id, word.Entry, word.Pos, word.Gloss, word.Notes}
+}
+
+func getWordModelFromJson(word *WilinWordJson) database.WordModel {
+	return database.WordModel{
+		Id:    word.ID,
+		Entry: word.Entry,
+		Pos:   word.Pos,
+		Gloss: word.Gloss,
+		Notes: word.Notes,
+	}
 }
 
 func (s *Server) HandleGetKalan(ctx *gin.Context) {
@@ -58,9 +68,22 @@ func (s *Server) HandleGetKalanById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, getJsonFromWordModel(&word))
 }
 
-func (s *Server) HanglePostKalan(ctx *gin.Context) {
+func (s *Server) HandlePostKalan(ctx *gin.Context) {
 	var kalanJson WilinWordJson
-	if err := ctx.BindJSON(kalanJson); err != nil {
+	if err := ctx.BindJSON(&kalanJson); err != nil {
+		ctx.Error(err)
 		ctx.String(http.StatusBadRequest, "Incorrectly formatted")
+		return
 	}
+
+	word := getWordModelFromJson(&kalanJson)
+	id, err := s.WordDao.CreateWord(&word)
+	if err != nil {
+		ctx.Error(err)
+		ctx.String(http.StatusInternalServerError, "Something went wrong adding this word")
+		return
+	}
+
+	kalanJson.ID = int(id)
+	ctx.JSON(http.StatusCreated, kalanJson)
 }
