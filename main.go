@@ -4,5 +4,5 @@ import "wilin/src/server"
 
 func main() {
 	router := server.New()
-	router.Run("localhost:8080")
+	router.Run("0.0.0.0:8080")
 }
