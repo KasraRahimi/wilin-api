@@ -14,6 +14,10 @@ type WordModel struct {
 	Notes string
 }
 
+var (
+	ErrNoChange = errors.New("Database was not changed")
+)
+
 func GetWordFromRecord(record []string) (WordModel, error) {
 	recordLength, word := len(record), WordModel{}
 	if recordLength != 3 && recordLength != 4 {
@@ -128,6 +132,39 @@ func (dao *WordDao) DeleteWordById(id int) error {
 
 	if rowsAffected == 0 {
 		return fmt.Errorf("DeleteWordById, no rows were deleted (row with id %d does not exist): %w", id, sql.ErrNoRows)
+	}
+
+	return nil
+}
+
+func (dao *WordDao) UpdateWord(word *WordModel) error {
+	conn, err := GetConnection()
+	if err != nil {
+		return fmt.Errorf("UpdateWord, failed at getting database connection: %w", err)
+	}
+
+	err = conn.QueryRow("SELECT * FROM words WHERE id=?", word.Id).Err()
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("UpdateWord, no rows were updated (row with id %d does not exist): %w", word.Id, sql.ErrNoRows)
+	}
+
+	result, err := conn.Exec(`
+	UPDATE words
+	SET entry=?, pos=?, gloss=?, notes=?
+	WHERE id=?
+	`, word.Entry, word.Pos, word.Gloss, word.Notes, word.Id)
+
+	if err != nil {
+		return fmt.Errorf("UpdateWord, failed at updating word: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("UpdateWord, failed to check rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("UpdateWord, no rows were updated (row with id %d does not exist): %w", word.Id, ErrNoChange)
 	}
 
 	return nil
