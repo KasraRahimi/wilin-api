@@ -108,3 +108,31 @@ func (s *Server) HandleDeleteKalan(ctx *gin.Context) {
 
 	ctx.Status(http.StatusOK)
 }
+
+func (s *Server) HandlePutKalan(ctx *gin.Context) {
+	var kalanJson WilinWordJson
+	if err := ctx.BindJSON(&kalanJson); err != nil {
+		ctx.Error(err)
+		ctx.String(http.StatusBadRequest, "Incorrectly formatted")
+		return
+	}
+
+	word := getWordModelFromJson(&kalanJson)
+	err := s.WordDao.UpdateWord(&word)
+	if err != nil {
+		ctx.Error(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.String(http.StatusNotFound, "Cannot find word id=%d, entry=%s", word.Id, word.Entry)
+			return
+		}
+		if errors.Is(err, database.ErrNoChange) {
+			ctx.String(http.StatusOK, "Update did not change word")
+			return
+		}
+
+		ctx.String(http.StatusInternalServerError, "Something went wrong updating the word")
+		return
+	}
+
+	ctx.Status(http.StatusCreated)
+}
