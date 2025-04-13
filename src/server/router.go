@@ -13,6 +13,8 @@ func New() *gin.Engine {
 		WordDao: &wordDao,
 	}
 	router := gin.Default()
+	router.Use(server.CorsMiddleware())
+
 	router.GET("/kalan", server.HandleGetKalan)
 	router.GET("/kalan/:id", server.HandleGetKalanById)
 
