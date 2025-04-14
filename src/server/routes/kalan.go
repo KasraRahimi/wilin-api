@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"wilin/src/database"
 
 	"github.com/gin-gonic/gin"
@@ -32,12 +33,50 @@ func getWordModelFromJson(word *WilinWordJson) database.WordModel {
 	}
 }
 
+func (s *Server) getSearchAndFields(ctx *gin.Context) (string, database.Fields) {
+	search, _ := ctx.GetQuery("search")
+	fieldString, isFieldStrings := ctx.GetQuery("fields")
+	if !isFieldStrings {
+		return search, database.Fields{Entry: true, Pos: true, Gloss: true, Notes: true}
+	}
+
+	fieldStrings := strings.Split(fieldString, ",")
+	fields := database.Fields{}
+	for _, field := range fieldStrings {
+		switch strings.ToLower(field) {
+		case "entry":
+			fields.Entry = true
+		case "pos":
+			fields.Pos = true
+		case "gloss":
+			fields.Gloss = true
+		case "notes":
+			fields.Notes = true
+		}
+	}
+	return search, fields
+}
+
 func (s *Server) HandleGetKalan(ctx *gin.Context) {
-	words, err := s.WordDao.ReadAllWords()
-	if err != nil {
-		ctx.Error(err)
-		ctx.JSON(http.StatusInternalServerError, nil)
-		return
+	var words []database.WordModel
+	var err error
+	search, fields := s.getSearchAndFields(ctx)
+	if search == "" {
+		words, err = s.WordDao.ReadAllWords()
+
+		if err != nil {
+			ctx.Error(err)
+			ctx.JSON(http.StatusInternalServerError, nil)
+			return
+		}
+	} else {
+		words, err = s.WordDao.ReadWordBySearch(search, fields)
+
+		if err != nil {
+			ctx.Error(err)
+			ctx.JSON(http.StatusInternalServerError, nil)
+			return
+		}
 	}
 
 	var wordsJson []WilinWordJson

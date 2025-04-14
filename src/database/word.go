@@ -14,6 +14,13 @@ type WordModel struct {
 	Notes string
 }
 
+type Fields struct {
+	Entry bool
+	Pos   bool
+	Gloss bool
+	Notes bool
+}
+
 var (
 	ErrNoChange = errors.New("Database was not changed")
 )
@@ -92,6 +99,50 @@ func (dao *WordDao) ReadAllWords() ([]WordModel, error) {
 		}
 		words = append(words, word)
 	}
+	return words, nil
+}
+
+func (dao *WordDao) ReadWordBySearch(search string, fields Fields) ([]WordModel, error) {
+	conn, err := GetConnection()
+	if err != nil {
+		return nil, fmt.Errorf("ReadWordBySearch, failed at getting database connection: %w", err)
+	}
+	defer conn.Close()
+	query := "SELECT id, entry, pos, gloss, notes FROM words WHERE 1=0 "
+	var args []interface{}
+	searchPattern := "%" + search + "%"
+
+	if fields.Entry {
+		query += "OR entry LIKE ? "
+		args = append(args, searchPattern)
+	}
+	if fields.Pos {
+		query += "OR pos LIKE ? "
+		args = append(args, searchPattern)
+	}
+	if fields.Gloss {
+		query += "OR gloss LIKE ? "
+		args = append(args, searchPattern)
+	}
+	if fields.Notes {
+		query += "OR notes LIKE ? "
+		args = append(args, searchPattern)
+	}
+
+	rows, err := conn.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("ReadWordBySearch, error querying rows: %w", err)
+	}
+
+	var words []WordModel
+	for rows.Next() {
+		word, err := dao.scanRows(rows)
+		if err != nil {
+			return words, fmt.Errorf("ReadWordBySearch, failed at scanning rows: %w", err)
+		}
+		words = append(words, word)
+	}
+
 	return words, nil
 }
 
