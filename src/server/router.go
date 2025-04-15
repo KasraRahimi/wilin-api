@@ -17,6 +17,7 @@ func New() *gin.Engine {
 
 	router.GET("/kalan", server.HandleGetKalan)
 	router.GET("/kalan/:id", server.HandleGetKalanById)
+	router.POST("/login", server.HandleLogin)
 
 	restricted := router.Group("")
 	restricted.Use(server.Authentication())
