@@ -12,11 +12,11 @@ import (
 )
 
 type WilinWordJson struct {
-	ID    int    `json:"id,omitempty"`
-	Entry string `json:"entry"`
-	Pos   string `json:"pos"`
-	Gloss string `json:"gloss"`
-	Notes string `json:"notes"`
+	ID    int    `json:"id,omitempty" form:"id"`
+	Entry string `json:"entry" form:"entry"`
+	Pos   string `json:"pos" form:"pos"`
+	Gloss string `json:"gloss" form:"gloss"`
+	Notes string `json:"notes" form:"notes"`
 }
 
 func getJsonFromWordModel(word *database.WordModel) WilinWordJson {
@@ -109,7 +109,7 @@ func (s *Server) HandleGetKalanById(ctx *gin.Context) {
 
 func (s *Server) HandlePostKalan(ctx *gin.Context) {
 	var kalanJson WilinWordJson
-	if err := ctx.BindJSON(&kalanJson); err != nil {
+	if err := ctx.ShouldBind(&kalanJson); err != nil {
 		ctx.Error(err)
 		ctx.String(http.StatusBadRequest, "Incorrectly formatted")
 		return
