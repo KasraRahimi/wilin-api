@@ -46,3 +46,26 @@ func CreateDictionaryTable() error {
 	}
 	return nil
 }
+
+func CreateUserTable() error {
+	db, err := GetConnection()
+	if err != nil {
+		return fmt.Errorf("CreateUserTable, could not connect to database: %w", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+		    id int PRIMARY KEY AUTO_INCREMENT,
+		    email varchar(127) UNIQUE NOT NULL,
+		    username varchar(31) UNIQUE NOT NULL,
+		    passwordHash varchar(255) NOT NULL,
+		    role varchar(255) NOT NULL
+		)
+	`)
+
+	if err != nil {
+		return fmt.Errorf("CreateUserTable, could not create dictionary table: %w", err)
+	}
+	return nil
+}
