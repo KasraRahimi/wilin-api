@@ -8,6 +8,7 @@ import (
 
 type Server struct {
 	WordDao *database.WordDao
+	UserDao *database.UserDao
 }
 
 type Header struct {

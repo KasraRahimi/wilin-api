@@ -8,9 +8,9 @@ import (
 )
 
 func New() *gin.Engine {
-	wordDao := database.WordDao{}
 	server := routes.Server{
-		WordDao: &wordDao,
+		WordDao: &database.WordDao{},
+		UserDao: &database.UserDao{},
 	}
 	router := gin.Default()
 	router.Use(server.CorsMiddleware())
@@ -18,6 +18,7 @@ func New() *gin.Engine {
 	router.GET("/kalan", server.HandleGetKalan)
 	router.GET("/kalan/:id", server.HandleGetKalanById)
 	router.POST("/login", server.HandleLogin)
+	router.POST("/signup", server.HandleSignup)
 
 	restricted := router.Group("")
 	restricted.Use(server.Authentication())
