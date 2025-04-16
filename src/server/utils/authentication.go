@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"net/mail"
 	"os"
 	"time"
 )
@@ -15,6 +16,11 @@ var (
 	ErrEmptySecret  = errors.New("empty secret")
 	ErrInvalidToken = errors.New("invalid token")
 )
+
+func IsValidEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
+}
 
 func GeneratePasswordHash(password string) (string, error) {
 	hashBytes, err := bcrypt.GenerateFromPassword([]byte(password), BYCRYPT_COST)
