@@ -2,6 +2,7 @@ package server
 
 import (
 	"wilin/src/database"
+	"wilin/src/database/permissions"
 	"wilin/src/server/routes"
 
 	"github.com/gin-gonic/gin"
@@ -14,18 +15,16 @@ func New() *gin.Engine {
 	}
 	router := gin.Default()
 	router.Use(server.CorsMiddleware())
-
-	router.GET("/kalan", server.HandleGetKalan)
-	router.GET("/kalan/:id", server.HandleGetKalanById)
+	router.Use(server.Authentication())
 	router.POST("/login", server.HandleLogin)
 	router.POST("/signup", server.HandleSignup)
 
-	restricted := router.Group("")
-	restricted.Use(server.Authentication())
+	router.GET("/kalan", server.VerifyPermissions(permissions.VIEW_WORD), server.HandleGetKalan)
+	router.GET("/kalan/:id", server.VerifyPermissions(permissions.VIEW_WORD), server.HandleGetKalanById)
 
-	restricted.POST("/kalan", server.HandlePostKalan)
-	restricted.DELETE("/kalan/:id", server.HandleDeleteKalan)
-	restricted.PUT("/kalan", server.HandlePutKalan)
+	router.POST("/kalan", server.VerifyPermissions(permissions.ADD_WORD), server.HandlePostKalan)
+	router.DELETE("/kalan/:id", server.VerifyPermissions(permissions.DELETE_WORD), server.HandleDeleteKalan)
+	router.PUT("/kalan", server.VerifyPermissions(permissions.MODIFY_WORD), server.HandlePutKalan)
 
 	return router
 }

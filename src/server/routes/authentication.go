@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"wilin/src/database"
+	"wilin/src/database/permissions"
 	"wilin/src/database/roles"
 	"wilin/src/server/utils"
 )
@@ -148,18 +149,51 @@ func (s *Server) HandleSignup(ctx *gin.Context) {
 
 func (s *Server) Authentication() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token := "nimilen"
 		authHeader := ctx.GetHeader("Authorization")
 		authHeaders := strings.Split(authHeader, " ")
 		if len(authHeaders) != 2 {
-			ctx.String(http.StatusUnauthorized, "Incorrect token")
-			ctx.Abort()
+			ctx.Next()
 			return
 		}
-		if authHeaders[1] != token {
-			ctx.String(http.StatusUnauthorized, "Incorrect token")
-			ctx.Abort()
+		tokenString := authHeaders[1]
+		token, err := utils.ParseToken(tokenString)
+		if err != nil {
+			ctx.Next()
 			return
+		}
+		ctx.Set("uid", token.Id)
+		ctx.Next()
+	}
+}
+
+func (s *Server) VerifyPermissions(perms ...string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var role string
+		uid, exists := ctx.Get("uid")
+		if exists {
+			id, err := strconv.Atoi(uid.(string))
+			if err != nil {
+				ctx.Error(err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				ctx.Abort()
+				return
+			}
+			user, err := s.UserDao.ReadUserById(id)
+			if err != nil {
+				ctx.Error(err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
+				ctx.Abort()
+				return
+			}
+			role = user.Role
+		} else {
+			role = roles.NON_USER
+		}
+		for _, permission := range perms {
+			if !permissions.CanRolePermission(role, permission) {
+				ctx.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
+				ctx.Abort()
+			}
 		}
 		ctx.Next()
 	}
