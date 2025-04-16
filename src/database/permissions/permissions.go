@@ -11,14 +11,18 @@ const (
 	MODIFY_WORD = "modify:word"
 )
 
-var admin_permissions = []string{
+var adminPermissions = []string{
 	VIEW_WORD,
 	ADD_WORD,
 	DELETE_WORD,
 	MODIFY_WORD,
 }
 
-var user_permissions = []string{
+var userPermissions = []string{
+	VIEW_WORD,
+}
+
+var nonUserPermissions = []string{
 	VIEW_WORD,
 }
 
@@ -34,9 +38,11 @@ func isPermissionInArray(permission string, permissionArray []string) bool {
 func CanRolePermission(role string, permission string) bool {
 	switch role {
 	case roles.ADMIN:
-		return isPermissionInArray(permission, admin_permissions)
+		return isPermissionInArray(permission, adminPermissions)
 	case roles.USER:
-		return isPermissionInArray(permission, user_permissions)
+		return isPermissionInArray(permission, userPermissions)
+	case roles.NON_USER:
+		return isPermissionInArray(permission, nonUserPermissions)
 	default:
 		return false
 	}
