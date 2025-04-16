@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"strings"
-	"time"
 	"wilin/src/database"
 	"wilin/src/database/roles"
 	"wilin/src/server/utils"
 )
+
+const TIME_TO_EXPIRE_MINUTES = 60 * 12 // 12 hours before a token expires
 
 type LoginFields struct {
 	Username string `json:"username" form:"username"`
@@ -64,14 +66,31 @@ func (s *Server) HandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	time.Sleep(1000 * time.Millisecond)
-
-	if loginFields.Username == "kawa" || loginFields.Password == "wikimokalan" {
-		ctx.JSON(http.StatusOK, gin.H{"token": "nimilen"})
+	user, err := s.UserDao.ReadUserByUsername(loginFields.Username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			_ = utils.IsPasswordAndHashSame(loginFields.Password, loginFields.Password)
+			// still compute a hash so the user cannot tell if the username or password is incorrect
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
+			return
+		}
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if !utils.IsPasswordAndHashSame(loginFields.Password, user.PasswordHash) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
 		return
 	}
 
-	ctx.String(http.StatusUnauthorized, "Invalid login information")
+	token, err := utils.GenerateToken(strconv.Itoa(user.Id), TIME_TO_EXPIRE_MINUTES)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"token": token})
 }
 
 func (s *Server) HandleSignup(ctx *gin.Context) {
