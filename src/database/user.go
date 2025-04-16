@@ -25,16 +25,12 @@ var (
 	ErrInvalidColumn = errors.New("invalid column")
 )
 
-type UserDao struct{}
+type UserDao struct {
+	Db *sql.DB
+}
 
 func (dao *UserDao) CreateUser(user *UserModel) (int64, error) {
-	conn, err := GetConnection()
-	if err != nil {
-		return 0, fmt.Errorf("CreateUser, could not connect to database: %w", err)
-	}
-	defer conn.Close()
-
-	result, err := conn.Exec(`
+	result, err := dao.Db.Exec(`
 		INSERT INTO users (email, username, passwordHash, role) 
 		VALUES (?, ?, ?, ?)
 	`, user.Email, user.Username, user.PasswordHash, user.Role)
@@ -53,28 +49,22 @@ func (dao *UserDao) CreateUser(user *UserModel) (int64, error) {
 }
 
 func (dao *UserDao) readUser(user *UserModel, column string) (*UserModel, error) {
-	conn, err := GetConnection()
-	if err != nil {
-		return nil, fmt.Errorf("readUser, could not connect to database: %w", err)
-	}
-	defer conn.Close()
-
 	query := fmt.Sprintf("SELECT id, email, username, passwordHash, role FROM users WHERE %s = ?", column)
 	var readUser UserModel
 	var row *sql.Row
 
 	switch column {
 	case idColumn:
-		row = conn.QueryRow(query, user.Id)
+		row = dao.Db.QueryRow(query, user.Id)
 	case emailColumn:
-		row = conn.QueryRow(query, user.Email)
+		row = dao.Db.QueryRow(query, user.Email)
 	case usernameColumn:
-		row = conn.QueryRow(query, user.Username)
+		row = dao.Db.QueryRow(query, user.Username)
 	default:
 		return nil, ErrInvalidColumn
 	}
 
-	err = row.Scan(&readUser.Id, &readUser.Email, &readUser.Username, &readUser.PasswordHash, &readUser.Role)
+	err := row.Scan(&readUser.Id, &readUser.Email, &readUser.Username, &readUser.PasswordHash, &readUser.Role)
 	if err != nil {
 		return nil, fmt.Errorf("readUser, could not scan row: %w", err)
 	}

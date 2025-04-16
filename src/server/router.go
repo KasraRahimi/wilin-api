@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"wilin/src/database"
 	"wilin/src/database/permissions"
 	"wilin/src/server/routes"
@@ -8,10 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func New() *gin.Engine {
+func New(db *sql.DB) (*gin.Engine, error) {
 	server := routes.Server{
-		WordDao: &database.WordDao{},
-		UserDao: &database.UserDao{},
+		WordDao: &database.WordDao{Db: db},
+		UserDao: &database.UserDao{Db: db},
 	}
 	router := gin.Default()
 	router.Use(server.CorsMiddleware())
@@ -26,5 +27,5 @@ func New() *gin.Engine {
 	router.DELETE("/kalan/:id", server.VerifyPermissions(permissions.DELETE_WORD), server.HandleDeleteKalan)
 	router.PUT("/kalan", server.VerifyPermissions(permissions.MODIFY_WORD), server.HandlePutKalan)
 
-	return router
+	return router, nil
 }

@@ -38,7 +38,9 @@ func GetWordFromRecord(record []string) (WordModel, error) {
 	return word, nil
 }
 
-type WordDao struct{}
+type WordDao struct {
+	Db *sql.DB
+}
 
 func (dao *WordDao) scanRow(row *sql.Row) (WordModel, error) {
 	var word WordModel
@@ -59,13 +61,7 @@ func (dao *WordDao) scanRows(rows *sql.Rows) (WordModel, error) {
 }
 
 func (dao *WordDao) CreateWord(word *WordModel) (int64, error) {
-	conn, err := GetConnection()
-	if err != nil {
-		return -1, fmt.Errorf("CreateWord, failed at getting database connection: %w", err)
-	}
-	defer conn.Close()
-
-	result, err := conn.Exec(`
+	result, err := dao.Db.Exec(`
 	INSERT INTO words (entry, pos, gloss, notes)
 	VALUES (?, ?, ?, ?)
 	`, word.Entry, word.Pos, word.Gloss, word.Notes)
@@ -80,13 +76,7 @@ func (dao *WordDao) CreateWord(word *WordModel) (int64, error) {
 }
 
 func (dao *WordDao) ReadAllWords() ([]WordModel, error) {
-	conn, err := GetConnection()
-	if err != nil {
-		return nil, fmt.Errorf("ReadAllWords, failed at getting database connection: %w", err)
-	}
-	defer conn.Close()
-
-	rows, err := conn.Query("SELECT id, entry, pos, gloss, notes FROM words")
+	rows, err := dao.Db.Query("SELECT id, entry, pos, gloss, notes FROM words")
 	if err != nil {
 		return nil, fmt.Errorf("ReadAllWords, error querying rows: %w", err)
 	}
@@ -103,11 +93,6 @@ func (dao *WordDao) ReadAllWords() ([]WordModel, error) {
 }
 
 func (dao *WordDao) ReadWordBySearch(search string, fields Fields) ([]WordModel, error) {
-	conn, err := GetConnection()
-	if err != nil {
-		return nil, fmt.Errorf("ReadWordBySearch, failed at getting database connection: %w", err)
-	}
-	defer conn.Close()
 	query := "SELECT id, entry, pos, gloss, notes FROM words WHERE 1=0 "
 	var args []interface{}
 	searchPattern := "%" + search + "%"
@@ -129,7 +114,7 @@ func (dao *WordDao) ReadWordBySearch(search string, fields Fields) ([]WordModel,
 		args = append(args, searchPattern)
 	}
 
-	rows, err := conn.Query(query, args...)
+	rows, err := dao.Db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("ReadWordBySearch, error querying rows: %w", err)
 	}
@@ -147,13 +132,7 @@ func (dao *WordDao) ReadWordBySearch(search string, fields Fields) ([]WordModel,
 }
 
 func (dao *WordDao) ReadWordById(id int) (WordModel, error) {
-	conn, err := GetConnection()
-	if err != nil {
-		return WordModel{}, fmt.Errorf("ReadWordById, failed at getting database connection: %w", err)
-	}
-	defer conn.Close()
-
-	row := conn.QueryRow("SELECT id, entry, pos, gloss, notes FROM words WHERE id=?", id)
+	row := dao.Db.QueryRow("SELECT id, entry, pos, gloss, notes FROM words WHERE id=?", id)
 	word, err := dao.scanRow(row)
 	if err != nil {
 		return WordModel{}, fmt.Errorf("ReadWordById, failed at scanning row: %w", err)
@@ -166,12 +145,7 @@ func (dao *WordDao) DeleteWord(word *WordModel) error {
 }
 
 func (dao *WordDao) DeleteWordById(id int) error {
-	conn, err := GetConnection()
-	if err != nil {
-		return fmt.Errorf("DeleteWordById, failed at getting database connection: %w", err)
-	}
-
-	result, err := conn.Exec("DELETE FROM words WHERE id=?", id)
+	result, err := dao.Db.Exec("DELETE FROM words WHERE id=?", id)
 	if err != nil {
 		return fmt.Errorf("DeleteWordById, failed at deleting word: %w", err)
 	}
@@ -189,17 +163,12 @@ func (dao *WordDao) DeleteWordById(id int) error {
 }
 
 func (dao *WordDao) UpdateWord(word *WordModel) error {
-	conn, err := GetConnection()
-	if err != nil {
-		return fmt.Errorf("UpdateWord, failed at getting database connection: %w", err)
-	}
-
-	err = conn.QueryRow("SELECT * FROM words WHERE id=?", word.Id).Err()
+	err := dao.Db.QueryRow("SELECT * FROM words WHERE id=?", word.Id).Err()
 	if errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("UpdateWord, no rows were updated (row with id %d does not exist): %w", word.Id, sql.ErrNoRows)
 	}
 
-	result, err := conn.Exec(`
+	result, err := dao.Db.Exec(`
 	UPDATE words
 	SET entry=?, pos=?, gloss=?, notes=?
 	WHERE id=?

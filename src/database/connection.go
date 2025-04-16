@@ -24,14 +24,8 @@ func GetConnection() (*sql.DB, error) {
 	return db, nil
 }
 
-func CreateDictionaryTable() error {
-	db, err := GetConnection()
-	if err != nil {
-		return fmt.Errorf("CreateDictionaryTable, could not connect to database: %w", err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec(`
+func CreateDictionaryTable(db *sql.DB) error {
+	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS words (
 			id 		int PRIMARY KEY AUTO_INCREMENT,
 			entry 	varchar(255) NOT NULL,
@@ -47,14 +41,8 @@ func CreateDictionaryTable() error {
 	return nil
 }
 
-func CreateUserTable() error {
-	db, err := GetConnection()
-	if err != nil {
-		return fmt.Errorf("CreateUserTable, could not connect to database: %w", err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec(`
+func CreateUserTable(db *sql.DB) error {
+	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 		    id int PRIMARY KEY AUTO_INCREMENT,
 		    email varchar(127) UNIQUE NOT NULL,
