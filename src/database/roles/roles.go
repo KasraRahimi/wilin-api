@@ -1,7 +1,9 @@
 package roles
 
+type Role string
+
 const (
-	NON_USER = "nonUser"
-	USER     = "user"
-	ADMIN    = "admin"
+	NON_USER Role = "nonUser"
+	USER     Role = "user"
+	ADMIN    Role = "admin"
 )

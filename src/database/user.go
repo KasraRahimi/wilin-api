@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"wilin/src/database/roles"
 )
 
 type UserModel struct {
@@ -11,7 +12,7 @@ type UserModel struct {
 	Email        string
 	Username     string
 	PasswordHash string
-	Role         string
+	Role         roles.Role
 }
 
 const (

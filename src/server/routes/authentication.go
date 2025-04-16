@@ -28,11 +28,11 @@ type SignUpFields struct {
 }
 
 type UserDTO struct {
-	Id       int    `json:"id" form:"id"`
-	Email    string `json:"email" form:"email"`
-	Username string `json:"username" form:"username"`
-	Password string `json:"password" form:"password"`
-	Role     string `json:"role" form:"role"`
+	Id       int        `json:"id" form:"id"`
+	Email    string     `json:"email" form:"email"`
+	Username string     `json:"username" form:"username"`
+	Password string     `json:"password" form:"password"`
+	Role     roles.Role `json:"role" form:"role"`
 }
 
 func (dto *UserDTO) FromUserModel(userModel *database.UserModel) {
@@ -165,9 +165,9 @@ func (s *Server) Authentication() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) VerifyPermissions(perms ...string) gin.HandlerFunc {
+func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var role string
+		var role roles.Role
 		uid, exists := ctx.Get("uid")
 		if exists {
 			id, err := strconv.Atoi(uid.(string))

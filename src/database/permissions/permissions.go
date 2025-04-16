@@ -4,29 +4,31 @@ import (
 	"wilin/src/database/roles"
 )
 
+type Permission string
+
 const (
-	VIEW_WORD   = "view:word"
-	ADD_WORD    = "add:word"
-	DELETE_WORD = "delete:word"
-	MODIFY_WORD = "modify:word"
+	VIEW_WORD   Permission = "view:word"
+	ADD_WORD    Permission = "add:word"
+	DELETE_WORD Permission = "delete:word"
+	MODIFY_WORD Permission = "modify:word"
 )
 
-var adminPermissions = []string{
+var adminPermissions = []Permission{
 	VIEW_WORD,
 	ADD_WORD,
 	DELETE_WORD,
 	MODIFY_WORD,
 }
 
-var userPermissions = []string{
+var userPermissions = []Permission{
 	VIEW_WORD,
 }
 
-var nonUserPermissions = []string{
+var nonUserPermissions = []Permission{
 	VIEW_WORD,
 }
 
-func isPermissionInArray(permission string, permissionArray []string) bool {
+func isPermissionInArray(permission Permission, permissionArray []Permission) bool {
 	for _, permissionValue := range permissionArray {
 		if permission == permissionValue {
 			return true
@@ -35,7 +37,7 @@ func isPermissionInArray(permission string, permissionArray []string) bool {
 	return false
 }
 
-func CanRolePermission(role string, permission string) bool {
+func CanRolePermission(role roles.Role, permission Permission) bool {
 	switch role {
 	case roles.ADMIN:
 		return isPermissionInArray(permission, adminPermissions)
