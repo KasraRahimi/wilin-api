@@ -1,15 +1,50 @@
 package routes
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
 	"time"
+	"wilin/src/database"
+	"wilin/src/server/utils"
 )
 
 type LoginFields struct {
 	Username string `json:"username" form:"username"`
 	Password string `json:"password" form:"password"`
+}
+
+type UserDTO struct {
+	Id       int    `json:"id" form:"id"`
+	Email    string `json:"email" form:"email"`
+	Username string `json:"username" form:"username"`
+	Password string `json:"password" form:"password"`
+	Role     string `json:"role" form:"role"`
+}
+
+func (dto *UserDTO) FromUserModel(userModel *database.UserModel) *UserDTO {
+	return &UserDTO{
+		Id:       userModel.Id,
+		Email:    userModel.Email,
+		Username: userModel.Username,
+		Password: "", // We don't want to send the password hash back to the frontend
+		Role:     userModel.Role,
+	}
+}
+
+func (dto *UserDTO) ToUserModel() (*database.UserModel, error) {
+	passwordHash, err := utils.GeneratePasswordHash(dto.Password)
+	if err != nil {
+		return nil, fmt.Errorf("ToUserModel, generating password hash: %w", err)
+	}
+	return &database.UserModel{
+		Id:           dto.Id,
+		Email:        dto.Email,
+		Username:     dto.Username,
+		PasswordHash: passwordHash,
+		Role:         dto.Role,
+	}, nil
 }
 
 func (s *Server) HandleLogin(ctx *gin.Context) {
