@@ -35,14 +35,11 @@ type UserDTO struct {
 	Role     string `json:"role" form:"role"`
 }
 
-func (dto *UserDTO) FromUserModel(userModel *database.UserModel) *UserDTO {
-	return &UserDTO{
-		Id:       userModel.Id,
-		Email:    userModel.Email,
-		Username: userModel.Username,
-		Password: "", // We don't want to send the password hash back to the frontend
-		Role:     userModel.Role,
-	}
+func (dto *UserDTO) FromUserModel(userModel *database.UserModel) {
+	dto.Id = userModel.Id
+	dto.Email = userModel.Email
+	dto.Username = userModel.Username
+	dto.Role = userModel.Role
 }
 
 func (dto *UserDTO) ToUserModel() (*database.UserModel, error) {
@@ -91,7 +88,9 @@ func (s *Server) HandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"token": token})
+	dto := UserDTO{}
+	dto.FromUserModel(user)
+	ctx.JSON(http.StatusOK, gin.H{"token": token, "user": dto})
 }
 
 func (s *Server) HandleSignup(ctx *gin.Context) {
