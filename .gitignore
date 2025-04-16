@@ -3,3 +3,4 @@ data/
 trg/*
 .vscode/
 .idea/
+.env
