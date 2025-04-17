@@ -146,6 +146,22 @@ func (s *Server) HandleSignup(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, userDTo)
 }
 
+func (s *Server) HandleMe(ctx *gin.Context) {
+	user, err := s.getUserFromContext(ctx)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userDto := UserDTO{}
+	userDto.FromUserModel(user)
+	ctx.JSON(http.StatusOK, gin.H{"user": userDto})
+}
+
 func (s *Server) Authentication() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
@@ -160,6 +176,10 @@ func (s *Server) Authentication() gin.HandlerFunc {
 			ctx.Next()
 			return
 		}
+		if utils.IsTokenTTLExpired(token.Ttl) {
+			ctx.Next()
+			return
+		}
 		ctx.Set("uid", token.Id)
 		ctx.Next()
 	}
@@ -167,27 +187,20 @@ func (s *Server) Authentication() gin.HandlerFunc {
 
 func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		user, err := s.getUserFromContext(ctx)
+		if err != nil {
+			ctx.Error(err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
+			return
+		}
+
 		var role roles.Role
-		uid, exists := ctx.Get("uid")
-		if exists {
-			id, err := strconv.Atoi(uid.(string))
-			if err != nil {
-				ctx.Error(err)
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				ctx.Abort()
-				return
-			}
-			user, err := s.UserDao.ReadUserById(id)
-			if err != nil {
-				ctx.Error(err)
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
-				ctx.Abort()
-				return
-			}
+		if user == nil {
 			role = user.Role
 		} else {
-			role = roles.NON_USER
+			role = roles.USER
 		}
+
 		for _, permission := range perms {
 			if !permissions.CanRolePermission(role, permission) {
 				ctx.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
@@ -196,4 +209,20 @@ func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerF
 		}
 		ctx.Next()
 	}
+}
+
+func (s *Server) getUserFromContext(ctx *gin.Context) (*database.UserModel, error) {
+	uid, exists := ctx.Get("uid")
+	if !exists {
+		return nil, nil
+	}
+	id, err := strconv.Atoi(uid.(string))
+	if err != nil {
+		return nil, err
+	}
+	user, err := s.UserDao.ReadUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

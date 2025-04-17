@@ -17,6 +17,9 @@ func New(db *sql.DB) (*gin.Engine, error) {
 	router := gin.Default()
 	router.Use(server.CorsMiddleware())
 	router.Use(server.Authentication())
+
+	router.GET("/me", server.HandleMe)
+
 	router.POST("/login", server.HandleLogin)
 	router.POST("/signup", server.HandleSignup)
 
