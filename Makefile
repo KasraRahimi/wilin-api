@@ -18,5 +18,8 @@ run: $(TRG)
 $(TRG): $(MAIN) $(SRC)
 	go build -o $@ $<
 
+test:
+	go test -v ./...
+
 clean:
 	rm -f ./trg/*
