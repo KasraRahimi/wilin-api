@@ -159,7 +159,7 @@ func (s *Server) HandleMe(ctx *gin.Context) {
 	}
 	userDto := UserDTO{}
 	userDto.FromUserModel(user)
-	ctx.JSON(http.StatusOK, gin.H{"user": userDto})
+	ctx.JSON(http.StatusOK, userDto)
 }
 
 func (s *Server) Authentication() gin.HandlerFunc {
