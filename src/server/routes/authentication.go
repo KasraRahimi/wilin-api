@@ -196,9 +196,9 @@ func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerF
 
 		var role roles.Role
 		if user == nil {
-			role = user.Role
-		} else {
 			role = roles.USER
+		} else {
+			role = user.Role
 		}
 
 		for _, permission := range perms {
