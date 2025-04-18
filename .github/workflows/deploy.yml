@@ -45,4 +45,5 @@ jobs:
           key: ${{ secrets.SECRET_KEY }}
           script: |
             mv /usr/local/bin/wilin/trg/main /usr/local/bin/wilin/main
+            rm -rf /usr/local/bin/wilin/trg
             systemctl restart wilin
