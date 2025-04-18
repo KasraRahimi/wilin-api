@@ -35,6 +35,29 @@ type UserDTO struct {
 	Role     roles.Role `json:"role" form:"role"`
 }
 
+const (
+	MAX_EMAIL_LENGTH    = 120
+	MAX_USERNAME_LENGTH = 30
+	MAX_PASSWORD_LENGTH = 60
+	MIN_PASSWORD_LENGTH = 8
+)
+
+const (
+	InvalidForm = "invalid format"
+
+	InvalidEmail = "invalid email"
+	EmailTaken   = "email taken"
+	EmailTooLong = "email too long"
+
+	NoUsername       = "no username"
+	UsernameHasSpace = "username has space"
+	UsernameTaken    = "username taken"
+	UsernameTooLong  = "username too long"
+
+	PasswordTooShort = "password too short"
+	PasswordTooLong  = "password too long"
+)
+
 func (dto *UserDTO) FromUserModel(userModel *database.UserModel) {
 	dto.Id = userModel.Id
 	dto.Email = userModel.Email
@@ -93,11 +116,54 @@ func (s *Server) HandleLogin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"token": token, "user": dto})
 }
 
+func (s *Server) validateSignUpFields(fields SignUpFields) (int, error) {
+	if !utils.IsValidEmail(fields.Email) {
+		return http.StatusBadRequest, errors.New(InvalidEmail)
+	}
+	if len(fields.Email) > MAX_EMAIL_LENGTH {
+		return http.StatusBadRequest, errors.New(EmailTooLong)
+	}
+	if len(fields.Username) == 0 {
+		return http.StatusBadRequest, errors.New(NoUsername)
+	}
+	if len(fields.Username) > MAX_USERNAME_LENGTH {
+		return http.StatusBadRequest, errors.New(UsernameTooLong)
+	}
+	if strings.Contains(fields.Username, " ") {
+		return http.StatusBadRequest, errors.New(UsernameHasSpace)
+	}
+	if len(fields.Password) < MIN_PASSWORD_LENGTH {
+		return http.StatusBadRequest, errors.New(PasswordTooShort)
+	}
+	if len(fields.Password) > MAX_PASSWORD_LENGTH {
+		return http.StatusBadRequest, errors.New(PasswordTooLong)
+	}
+
+	_, err := s.UserDao.ReadUserByEmail(fields.Email)
+	if !errors.Is(err, sql.ErrNoRows) {
+		return http.StatusConflict, errors.New(EmailTaken)
+	}
+
+	_, err = s.UserDao.ReadUserByUsername(fields.Username)
+	if !errors.Is(err, sql.ErrNoRows) {
+		return http.StatusConflict, errors.New(UsernameTaken)
+	}
+
+	return http.StatusOK, nil
+}
+
 func (s *Server) HandleSignup(ctx *gin.Context) {
 	var signUpFields SignUpFields
 	if err := ctx.ShouldBind(&signUpFields); err != nil {
 		ctx.Error(err)
-		ctx.String(http.StatusBadRequest, "Incorrectly formatted")
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": InvalidForm})
+		return
+	}
+
+	statusCode, err := s.validateSignUpFields(signUpFields)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(statusCode, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -109,27 +175,10 @@ func (s *Server) HandleSignup(ctx *gin.Context) {
 		Role:     roles.USER,
 	}
 
-	if !utils.IsValidEmail(userDTo.Email) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid email"})
-		return
-	}
-
 	userModel, err := userDTo.ToUserModel()
 	if err != nil {
 		ctx.Error(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	_, err = s.UserDao.ReadUserByEmail(userModel.Email)
-	if !errors.Is(err, sql.ErrNoRows) {
-		ctx.JSON(http.StatusConflict, gin.H{"error": "email already taken"})
-		return
-	}
-
-	_, err = s.UserDao.ReadUserByUsername(userModel.Username)
-	if !errors.Is(err, sql.ErrNoRows) {
-		ctx.JSON(http.StatusConflict, gin.H{"error": "username already taken"})
 		return
 	}
 
