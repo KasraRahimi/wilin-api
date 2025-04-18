@@ -1,6 +1,9 @@
 name: Verify Build and Tests
 on:
   push:
+    branches:
+      - '**'
+      - '!release'
   workflow_call:
 
 jobs:

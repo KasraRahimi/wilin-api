@@ -1,6 +1,8 @@
 name: Deploy Build
 on:
   push:
+    branches:
+      - 'release'
 
 jobs:
   Verify:
