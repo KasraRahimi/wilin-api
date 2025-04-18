@@ -14,6 +14,8 @@ func New(db *sql.DB) (*gin.Engine, error) {
 		WordDao: &database.WordDao{Db: db},
 		UserDao: &database.UserDao{Db: db},
 	}
+	server.GenerateFakePassword()
+
 	router := gin.Default()
 	router.Use(server.CorsMiddleware())
 	router.Use(server.Authentication())

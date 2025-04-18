@@ -90,7 +90,7 @@ func (s *Server) HandleLogin(ctx *gin.Context) {
 	user, err := s.UserDao.ReadUserByUsername(loginFields.Username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			_ = utils.IsPasswordAndHashSame(loginFields.Password, loginFields.Password)
+			_ = utils.IsPasswordAndHashSame(loginFields.Password, s.fakePasswordHash)
 			// still compute a hash so the user cannot tell if the username or password is incorrect
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
 			return

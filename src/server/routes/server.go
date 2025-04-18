@@ -2,13 +2,24 @@ package routes
 
 import (
 	"wilin/src/database"
+	"wilin/src/server/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	WordDao *database.WordDao
-	UserDao *database.UserDao
+	WordDao          *database.WordDao
+	UserDao          *database.UserDao
+	fakePasswordHash string
+}
+
+func (s *Server) GenerateFakePassword() {
+	hash, err := utils.GeneratePasswordHash("password")
+	if err != nil {
+		s.fakePasswordHash = "$2a$13$jidvuZmt0Bji5yuIckM4jOFKwF062Lt3M8M.A4uGSKIkS3r8BA00O"
+		return
+	}
+	s.fakePasswordHash = hash
 }
 
 type Header struct {
