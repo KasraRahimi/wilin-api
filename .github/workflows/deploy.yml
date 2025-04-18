@@ -4,7 +4,7 @@ on:
 
 env:
   SOURCE: "./trg/main"
-  TARGET: "/usr/local/bin/wilin"
+  TARGET: "/usr/local/bin/wilin/"
 
 jobs:
   Verify:
