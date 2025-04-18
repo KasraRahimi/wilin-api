@@ -27,6 +27,11 @@ jobs:
           go mod tidy
           make
 
+      - name: List paths
+        run: |
+          ls -a
+          ls ./trg -a
+
       - name: Put Binary in Server
         uses: appleboy/scp-action@v0.1.7
         with:
