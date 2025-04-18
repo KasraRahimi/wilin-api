@@ -24,6 +24,7 @@ jobs:
         
       - name: Build Binary
         run: |
+          go mod tidy
           make
 
       - name: Put Binary in Server
