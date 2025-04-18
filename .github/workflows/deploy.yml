@@ -2,10 +2,6 @@ name: Deploy Build
 on:
   push:
 
-env:
-  SOURCE: "trg/main"
-  TARGET: "/usr/local/bin/wilin/"
-
 jobs:
   Verify:
     uses: ./.github/workflows/verify.yml
@@ -38,5 +34,5 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SECRET_KEY }}
-          source: $SOURCE
-          target: $TARGET
+          source: "./trg/main"
+          target: "/usr/local/bin/wilin/"
