@@ -3,7 +3,7 @@ on:
   push:
 
 env:
-  SOURCE: "./trg/main"
+  SOURCE: "trg/main"
   TARGET: "/usr/local/bin/wilin/"
 
 jobs:
