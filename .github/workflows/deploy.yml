@@ -1,0 +1,39 @@
+name: Deploy Build
+on:
+  push:
+
+env:
+  SOURCE: ./trg/main
+  TARGET: /usr/local/bin/wilin
+
+jobs:
+  Verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Verify Workflow
+        uses: ./.github/workflows/verify.yml
+  
+  Publish:
+    needs: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Commit
+        uses: actions/checkout@v4
+      
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.6
+        
+      - name: Build Binary
+        run: |
+          make
+
+      - name: Put Binary in Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SECRET_KEY }}
+          source: $SOURCE
+          target: $TARGET
