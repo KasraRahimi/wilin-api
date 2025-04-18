@@ -34,5 +34,15 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SECRET_KEY }}
-          source: "trg/main"
+          source: "./trg/main"
           target: "/usr/local/bin/wilin/"
+
+      - name: Move Binary and Restart Service
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SECRET_KEY }}
+          script: |
+            mv /usr/local/bin/wilin/trg/main /usr/local/bin/wilin/main
+            systemctl restart wilin
