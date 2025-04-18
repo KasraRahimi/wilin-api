@@ -8,13 +8,7 @@ env:
 
 jobs:
   Verify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Commit
-        uses: actions/checkout@v4
-
-      - name: Run Verify Workflow
-        uses: ./.github/workflows/verify.yml
+    uses: ./.github/workflows/verify.yml
   
   Publish:
     needs: Verify
