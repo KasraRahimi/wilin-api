@@ -3,8 +3,8 @@ on:
   push:
 
 env:
-  SOURCE: ./trg/main
-  TARGET: /usr/local/bin/wilin
+  SOURCE: "./trg/main"
+  TARGET: "/usr/local/bin/wilin"
 
 jobs:
   Verify:
@@ -33,5 +33,5 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SECRET_KEY }}
-          source: "trg/main"
+          source: $SOURCE
           target: $TARGET
