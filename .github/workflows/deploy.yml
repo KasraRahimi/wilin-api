@@ -33,5 +33,5 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SECRET_KEY }}
-          source: $SOURCE
+          source: "trg/main"
           target: $TARGET
