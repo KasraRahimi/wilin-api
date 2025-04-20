@@ -33,11 +33,21 @@ func getWordModelFromJson(word *WilinWordJson) database.WordModel {
 	}
 }
 
-func (s *Server) getSearchAndFields(ctx *gin.Context) (string, database.Fields) {
-	search, _ := ctx.GetQuery("search")
+func (s *Server) getSearchParameters(ctx *gin.Context) *database.SearchParameters {
+	parameters := database.SearchParameters{}
+	search, isSearch := ctx.GetQuery("search")
 	fieldString, isFieldStrings := ctx.GetQuery("fields")
+	column, isColumn := ctx.GetQuery("sort")
+	pageString, isPageString := ctx.GetQuery("page")
+
+	if !(isSearch || isColumn || isFieldStrings || isPageString) {
+		return nil
+	}
+
+	parameters.Search = search
+
 	if !isFieldStrings {
-		return search, database.Fields{Entry: true, Pos: true, Gloss: true, Notes: true}
+		fieldString = "entry,pos,gloss,notes"
 	}
 
 	fieldStrings := strings.Split(fieldString, ",")
@@ -54,36 +64,70 @@ func (s *Server) getSearchAndFields(ctx *gin.Context) (string, database.Fields) 
 			fields.Notes = true
 		}
 	}
-	return search, fields
+
+	parameters.Fields = fields
+
+	if !isColumn {
+		column = "entry"
+	}
+
+	switch column {
+	case "entry":
+		parameters.Column = database.Entry
+	case "pos":
+		parameters.Column = database.Pos
+	case "gloss":
+		parameters.Column = database.Gloss
+	case "notes":
+		parameters.Column = database.Notes
+	default:
+		parameters.Column = database.Entry
+	}
+
+	parameters.Page, _ = strconv.Atoi(pageString)
+	if parameters.Page < 1 {
+		parameters.Page = 1
+	}
+
+	return &parameters
 }
 
 func (s *Server) HandleGetKalan(ctx *gin.Context) {
-	var words []database.WordModel
-	var err error
-	search, fields := s.getSearchAndFields(ctx)
-	if search == "" {
-		words, err = s.WordDao.ReadAllWords()
+	words, err := s.WordDao.ReadAllWords()
 
-		if err != nil {
-			ctx.Error(err)
-			ctx.JSON(http.StatusInternalServerError, nil)
-			return
-		}
-	} else {
-		words, err = s.WordDao.ReadWordBySearch(search, fields)
-
-		if err != nil {
-			ctx.Error(err)
-			ctx.JSON(http.StatusInternalServerError, nil)
-			return
-		}
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, nil)
+		return
 	}
 
 	var wordsJson []WilinWordJson
 	for _, word := range words {
 		wordsJson = append(wordsJson, getJsonFromWordModel(&word))
 	}
+
 	ctx.JSON(http.StatusOK, wordsJson)
+}
+
+func (s *Server) HandleGetKalanPaginated(ctx *gin.Context) {
+	parameters := s.getSearchParameters(ctx)
+	words, pageCount, err := s.WordDao.ReadWordBySearch(*parameters)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	var wordsJson []WilinWordJson
+	for _, word := range words {
+		wordsJson = append(wordsJson, getJsonFromWordModel(&word))
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"pageCount": pageCount,
+		"words":     wordsJson,
+	})
 }
 
 func (s *Server) HandleGetKalanById(ctx *gin.Context) {

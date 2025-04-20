@@ -21,6 +21,33 @@ type Fields struct {
 	Notes bool
 }
 
+func (f *Fields) Map() map[string]bool {
+	return map[string]bool{
+		"entry": f.Entry,
+		"pos":   f.Pos,
+		"gloss": f.Gloss,
+		"notes": f.Notes,
+	}
+}
+
+type Column = string
+
+const (
+	Entry Column = "entry"
+	Pos   Column = "pos"
+	Gloss Column = "gloss"
+	Notes Column = "notes"
+)
+
+type SearchParameters struct {
+	Search string
+	Fields Fields
+	Column Column
+	Page   int
+}
+
+const PageSize = 100
+
 var (
 	ErrNoChange = errors.New("Database was not changed")
 )
@@ -76,7 +103,7 @@ func (dao *WordDao) CreateWord(word *WordModel) (int64, error) {
 }
 
 func (dao *WordDao) ReadAllWords() ([]WordModel, error) {
-	rows, err := dao.Db.Query("SELECT id, entry, pos, gloss, notes FROM words")
+	rows, err := dao.Db.Query("SELECT id, entry, pos, gloss, notes FROM words ORDER BY entry")
 	if err != nil {
 		return nil, fmt.Errorf("ReadAllWords, error querying rows: %w", err)
 	}
@@ -92,43 +119,69 @@ func (dao *WordDao) ReadAllWords() ([]WordModel, error) {
 	return words, nil
 }
 
-func (dao *WordDao) ReadWordBySearch(search string, fields Fields) ([]WordModel, error) {
-	query := "SELECT id, entry, pos, gloss, notes FROM words WHERE 1=0 "
+func (dao *WordDao) generateQueryRestriction(searchParameters SearchParameters) (string, []interface{}) {
+	var query string
 	var args []interface{}
-	searchPattern := "%" + search + "%"
+	searchPattern := "%" + searchParameters.Search + "%"
 
-	if fields.Entry {
-		query += "OR entry LIKE ? "
-		args = append(args, searchPattern)
+	for column, enabled := range searchParameters.Fields.Map() {
+		if enabled {
+			query += fmt.Sprintf("OR %s LIKE ? ", column)
+			args = append(args, searchPattern)
+		}
 	}
-	if fields.Pos {
-		query += "OR pos LIKE ? "
-		args = append(args, searchPattern)
+
+	query += fmt.Sprintf("ORDER BY %s ", searchParameters.Column)
+
+	page := searchParameters.Page - 1
+	if page < 0 {
+		return query, args
 	}
-	if fields.Gloss {
-		query += "OR gloss LIKE ? "
-		args = append(args, searchPattern)
-	}
-	if fields.Notes {
-		query += "OR notes LIKE ? "
-		args = append(args, searchPattern)
-	}
+	query += fmt.Sprintf("LIMIT %d OFFSET %d", PageSize, PageSize*page)
+
+	return query, args
+}
+
+func (dao *WordDao) ReadWordBySearch(parameters SearchParameters) ([]WordModel, int, error) {
+	query := "SELECT id, entry, pos, gloss, notes FROM words WHERE 1=0 "
+	restriction, args := dao.generateQueryRestriction(parameters)
+	query += restriction
 
 	rows, err := dao.Db.Query(query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("ReadWordBySearch, error querying rows: %w", err)
+		return nil, 0, fmt.Errorf("ReadWordBySearch, error querying rows: %w", err)
 	}
 
 	var words []WordModel
 	for rows.Next() {
 		word, err := dao.scanRows(rows)
 		if err != nil {
-			return words, fmt.Errorf("ReadWordBySearch, failed at scanning rows: %w", err)
+			return words, 0, fmt.Errorf("ReadWordBySearch, failed at scanning rows: %w", err)
 		}
 		words = append(words, word)
 	}
 
-	return words, nil
+	pageCount, err := dao.getPageCount(parameters)
+	if err != nil {
+		return words, 0, fmt.Errorf("ReadWordBySearch, failed at scanning rows: %w", err)
+	}
+
+	return words, pageCount, nil
+}
+
+func (dao *WordDao) getPageCount(parameters SearchParameters) (int, error) {
+	query := "SELECT COUNT(*) FROM words WHERE 1=0 "
+	parameters.Page = 0
+	restriction, args := dao.generateQueryRestriction(parameters)
+	query += restriction
+
+	row := dao.Db.QueryRow(query, args...)
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return -1, fmt.Errorf("getPageCount, failed at scanning row: %w", err)
+	}
+	return ((count - 1) / PageSize) + 1, nil
 }
 
 func (dao *WordDao) ReadWordById(id int) (WordModel, error) {

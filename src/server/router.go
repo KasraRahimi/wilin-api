@@ -26,6 +26,7 @@ func New(db *sql.DB) (*gin.Engine, error) {
 	router.POST("/signup", server.HandleSignup)
 
 	router.GET("/kalan", server.VerifyPermissions(permissions.VIEW_WORD), server.HandleGetKalan)
+	router.GET("/kalan/paginated", server.VerifyPermissions(permissions.VIEW_WORD), server.HandleGetKalanPaginated)
 	router.GET("/kalan/:id", server.VerifyPermissions(permissions.VIEW_WORD), server.HandleGetKalanById)
 
 	router.POST("/kalan", server.VerifyPermissions(permissions.ADD_WORD), server.HandlePostKalan)
