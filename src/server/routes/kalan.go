@@ -19,6 +19,18 @@ type WilinWordJson struct {
 	Notes string `json:"notes" form:"notes"`
 }
 
+var (
+	errInvalidFormat = errors.New("invalid format")
+	errNoId          = errors.New("no id")
+	errNoEntry       = errors.New("no entry")
+	errNoPos         = errors.New("no pos")
+	errNoGloss       = errors.New("no gloss")
+)
+
+func getErrorJson(err string) gin.H {
+	return gin.H{"error": err}
+}
+
 func getJsonFromWordModel(word *database.WordModel) WilinWordJson {
 	return WilinWordJson{word.Id, word.Entry, word.Pos, word.Gloss, word.Notes}
 }
@@ -151,11 +163,30 @@ func (s *Server) HandleGetKalanById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, getJsonFromWordModel(&word))
 }
 
+func (s *Server) validateKalanPostJson(kalan *WilinWordJson) error {
+	if kalan.Entry == "" {
+		return errNoEntry
+	}
+	if kalan.Pos == "" {
+		return errNoPos
+	}
+	if kalan.Gloss == "" {
+		return errNoGloss
+	}
+	return nil
+}
+
 func (s *Server) HandlePostKalan(ctx *gin.Context) {
 	var kalanJson WilinWordJson
 	if err := ctx.ShouldBind(&kalanJson); err != nil {
 		ctx.Error(err)
-		ctx.String(http.StatusBadRequest, "Incorrectly formatted")
+		ctx.JSON(http.StatusBadRequest, getErrorJson(errInvalidFormat.Error()))
+		return
+	}
+
+	if err := s.validateKalanPostJson(&kalanJson); err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusBadRequest, getErrorJson(err.Error()))
 		return
 	}
 
@@ -163,7 +194,7 @@ func (s *Server) HandlePostKalan(ctx *gin.Context) {
 	id, err := s.WordDao.CreateWord(&word)
 	if err != nil {
 		ctx.Error(err)
-		ctx.String(http.StatusInternalServerError, "Something went wrong adding this word")
+		ctx.JSON(http.StatusInternalServerError, getErrorJson("something went wrong"))
 		return
 	}
 
