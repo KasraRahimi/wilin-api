@@ -163,7 +163,7 @@ func (s *Server) HandleGetKalanById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, getJsonFromWordModel(&word))
 }
 
-func (s *Server) validateKalanPostJson(kalan *WilinWordJson) error {
+func (s *Server) validateKalanJson(kalan *WilinWordJson) error {
 	if kalan.Entry == "" {
 		return errNoEntry
 	}
@@ -172,6 +172,9 @@ func (s *Server) validateKalanPostJson(kalan *WilinWordJson) error {
 	}
 	if kalan.Gloss == "" {
 		return errNoGloss
+	}
+	if kalan.ID == 0 {
+		return errNoId
 	}
 	return nil
 }
@@ -184,7 +187,7 @@ func (s *Server) HandlePostKalan(ctx *gin.Context) {
 		return
 	}
 
-	if err := s.validateKalanPostJson(&kalanJson); err != nil {
+	if err := s.validateKalanJson(&kalanJson); err != nil && !errors.Is(err, errNoId) {
 		ctx.Error(err)
 		ctx.JSON(http.StatusBadRequest, getErrorJson(err.Error()))
 		return
@@ -225,9 +228,15 @@ func (s *Server) HandleDeleteKalan(ctx *gin.Context) {
 
 func (s *Server) HandlePutKalan(ctx *gin.Context) {
 	var kalanJson WilinWordJson
-	if err := ctx.BindJSON(&kalanJson); err != nil {
+	if err := ctx.ShouldBind(&kalanJson); err != nil {
 		ctx.Error(err)
-		ctx.String(http.StatusBadRequest, "Incorrectly formatted")
+		ctx.JSON(http.StatusBadRequest, getErrorJson(errInvalidFormat.Error()))
+		return
+	}
+
+	if err := s.validateKalanJson(&kalanJson); err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusBadRequest, getErrorJson(err.Error()))
 		return
 	}
 
@@ -244,7 +253,7 @@ func (s *Server) HandlePutKalan(ctx *gin.Context) {
 			return
 		}
 
-		ctx.String(http.StatusInternalServerError, "Something went wrong updating the word")
+		ctx.JSON(http.StatusInternalServerError, getErrorJson("something went wrong"))
 		return
 	}
 
