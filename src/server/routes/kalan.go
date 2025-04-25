@@ -223,7 +223,7 @@ func (s *Server) HandleDeleteKalan(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (s *Server) HandlePutKalan(ctx *gin.Context) {
