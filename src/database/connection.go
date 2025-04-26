@@ -3,19 +3,21 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
-	username = "kawa"
-	password = "password"
-	dbname   = "wilin"
-	address  = "localhost:3306"
-	driver   = "mysql"
+	dbname  = "wilin"
+	address = "localhost:3306"
+	driver  = "mysql"
 )
 
 func GetConnection() (*sql.DB, error) {
+	username := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+
 	dataSource := fmt.Sprintf("%s:%s@(%s)/%s", username, password, address, dbname)
 	db, err := sql.Open(driver, dataSource)
 	if err != nil {
