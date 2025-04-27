@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,9 +11,11 @@ import (
 	"wilin/src/database/permissions"
 	"wilin/src/database/roles"
 	"wilin/src/server/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
-const TIME_TO_EXPIRE_MINUTES = 60 * 12 // 12 hours before a token expires
+const TIME_TO_EXPIRE_MINUTES = 60 * 24 * 3 // 3 days before a token expires
 
 type LoginFields struct {
 	Username string `json:"username" form:"username"`
