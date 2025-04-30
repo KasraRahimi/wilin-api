@@ -16,6 +16,7 @@ run: $(TRG)
 	$^
 
 $(TRG): $(MAIN) $(SRC)
+	mkdir -p $(TRG_DIR)
 	go build -o $@ $<
 
 test:
