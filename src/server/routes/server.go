@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"net/http"
 	"wilin/src/database"
 	"wilin/src/server/utils"
 
@@ -39,7 +40,7 @@ func (s *Server) CorsMiddleware() gin.HandlerFunc {
 		}
 
 		if ctx.Request.Method == "OPTIONS" {
-			ctx.AbortWithStatus(204)
+			ctx.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 		ctx.Next()
