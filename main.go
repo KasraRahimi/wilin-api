@@ -23,14 +23,9 @@ func main() {
 		log.Fatalf("Error pinging database: %v\n", err)
 	}
 
-	err = database.CreateDictionaryTable(db)
+	err = database.CreateDatabaseTables(db)
 	if err != nil {
-		log.Fatalf("Error creating dictionary table: %v\n", err)
-	}
-
-	err = database.CreateUserTable(db)
-	if err != nil {
-		log.Fatalf("Error creating user table: %v\n", err)
+		log.Fatalf("Error creating tables: %v\n", err)
 	}
 
 	router, err := server.New(db)

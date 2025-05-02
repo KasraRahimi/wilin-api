@@ -59,3 +59,37 @@ func CreateUserTable(db *sql.DB) error {
 	}
 	return nil
 }
+
+func CreateProposalTable(db *sql.DB) error {
+	_, err := db.Exec(`
+	CREATE TABLE IF NOT EXISTS proposals (
+	    id int PRIMARY KEY AUTO_INCREMENT,
+	    user_id int,
+	    entry 	varchar(255) NOT NULL,
+		pos 	varchar(255) NOT NULL,
+		gloss	varchar(255) NOT NULL,
+		notes 	varchar(2047) NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+	)
+	`)
+	if err != nil {
+		return fmt.Errorf("CreateProposalTable, could not create dictionary table: %w", err)
+	}
+	return nil
+}
+
+func CreateDatabaseTables(db *sql.DB) error {
+	err := CreateDictionaryTable(db)
+	if err != nil {
+		return fmt.Errorf("CreateDatabaseTables, could not create dictionary table: %w", err)
+	}
+	err = CreateUserTable(db)
+	if err != nil {
+		return fmt.Errorf("CreateDatabaseTables, could not create user table: %w", err)
+	}
+	err = CreateProposalTable(db)
+	if err != nil {
+		return fmt.Errorf("CreateDatabaseTables, could not create proposal table: %w", err)
+	}
+	return nil
+}
