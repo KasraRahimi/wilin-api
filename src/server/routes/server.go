@@ -29,12 +29,18 @@ type Header struct {
 
 func (s *Server) CorsMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		originHeader := Header{Key: "Access-Control-Allow-Origin", Value: "https://www.wilin.info"}
+		if origin := ctx.Request.Header.Get("Origin"); origin == "http://localhost:3000" {
+			originHeader.Value = origin
+		}
+
 		headers := [...]Header{
-			{"Access-Control-Allow-Origin", "*"},
+			originHeader,
 			{"Access-Control-Allow-Credentials", "true"},
-			{"Access-Control-Allow-Headers", "*"},
+			{"Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Cache-Control, X-Custom-Header"},
 			{"Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE"},
 		}
+
 		for _, header := range headers {
 			ctx.Writer.Header().Set(header.Key, header.Value)
 		}
