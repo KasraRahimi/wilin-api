@@ -35,10 +35,13 @@ func IsPasswordAndHashSame(password, hash string) bool {
 	return err == nil
 }
 
-func GenerateToken(userId string, timeToExpireMinutes int) (string, error) {
+func GenerateToken(tokenType string, userId string, expireMinutes int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  userId,
-		"ttl": time.Now().Add(time.Minute * time.Duration(timeToExpireMinutes)).Unix(),
+		"token_type": tokenType,
+		"iss":        "www.wilin.info",
+		"sub":        userId,
+		"iat":        jwt.NewNumericDate(time.Now()),
+		"exp":        jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(expireMinutes))),
 	})
 
 	secretKey := os.Getenv("SECRET_KEY")
@@ -50,8 +53,11 @@ func GenerateToken(userId string, timeToExpireMinutes int) (string, error) {
 }
 
 type TokenStruct struct {
-	Id  string
-	Ttl time.Time
+	TokenType string
+	Iss       string
+	Sub       string
+	Iat       float64
+	Exp       float64
 }
 
 func ParseToken(tokenString string) (TokenStruct, error) {
@@ -72,21 +78,34 @@ func ParseToken(tokenString string) (TokenStruct, error) {
 		return tokenStruct, ErrInvalidToken
 	}
 
-	tokenStruct.Id, ok = claims["id"].(string)
+	tokenStruct.TokenType, ok = claims["token_type"].(string)
 	if !ok {
 		return tokenStruct, ErrInvalidToken
 	}
 
-	ttlFloat, ok := claims["ttl"].(float64) // this conversion is required due to reasons
+	tokenStruct.Iss, ok = claims["iss"].(string)
 	if !ok {
 		return tokenStruct, ErrInvalidToken
 	}
 
-	tokenStruct.Ttl = time.Unix(int64(ttlFloat), 0)
+	tokenStruct.Sub, ok = claims["sub"].(string)
+	if !ok {
+		return tokenStruct, ErrInvalidToken
+	}
+
+	tokenStruct.Iat, ok = claims["iat"].(float64)
+	if !ok {
+		return tokenStruct, ErrInvalidToken
+	}
+
+	tokenStruct.Exp, ok = claims["exp"].(float64)
+	if !ok {
+		return tokenStruct, ErrInvalidToken
+	}
 
 	return tokenStruct, nil
 }
 
-func IsTokenTTLExpired(ttl time.Time) bool {
-	return time.Now().After(ttl)
+func IsExpired(exp float64) bool {
+	return time.Now().After(time.Unix(int64(exp), 0))
 }
