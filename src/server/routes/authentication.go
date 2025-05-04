@@ -15,7 +15,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const TIME_TO_EXPIRE_MINUTES = 60 * 24 * 3 // 3 days before a token expires
+const TIME_TO_AUTH_EXPIRE_MINUTES = 15
+const TIME_TO_REFRESH_EXPIRE_MINUTES = 60 * 24 * 31
 
 type LoginFields struct {
 	Username string `json:"username" form:"username"`
@@ -34,6 +35,10 @@ type UserDTO struct {
 	Username string     `json:"username" form:"username"`
 	Password string     `json:"password" form:"password"`
 	Role     roles.Role `json:"role" form:"role"`
+}
+
+type RefreshTokenDTO struct {
+	Token string `json:"token"`
 }
 
 const (
@@ -105,7 +110,14 @@ func (s *Server) HandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(strconv.Itoa(user.Id), TIME_TO_EXPIRE_MINUTES)
+	authToken, err := utils.GenerateToken("auth", strconv.Itoa(user.Id), TIME_TO_AUTH_EXPIRE_MINUTES)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	refreshToken, err := utils.GenerateToken("refresh", strconv.Itoa(user.Id), TIME_TO_REFRESH_EXPIRE_MINUTES)
 	if err != nil {
 		ctx.Error(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -114,7 +126,7 @@ func (s *Server) HandleLogin(ctx *gin.Context) {
 
 	dto := UserDTO{}
 	dto.FromUserModel(user)
-	ctx.JSON(http.StatusOK, gin.H{"token": token, "user": dto})
+	ctx.JSON(http.StatusOK, gin.H{"authToken": authToken, "refreshToken": refreshToken, "user": dto})
 }
 
 func (s *Server) validateSignUpFields(fields SignUpFields) (int, error) {
@@ -212,25 +224,57 @@ func (s *Server) HandleMe(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, userDto)
 }
 
+func (s *Server) HandleRefresh(ctx *gin.Context) {
+	var refreshToken RefreshTokenDTO
+	if err := ctx.ShouldBind(&refreshToken); err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": InvalidForm})
+		return
+	}
+	token, err := utils.ParseToken(refreshToken.Token)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		return
+	}
+	if utils.IsExpired(token.Exp) || token.TokenType != "refresh" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		return
+	}
+	newAuthToken, err := utils.GenerateToken("auth", token.Sub, TIME_TO_AUTH_EXPIRE_MINUTES)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	ctx.JSON(http.StatusOK, gin.H{"token": newAuthToken})
+}
+
 func (s *Server) Authentication() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
+		authHeader := ctx.Request.Header.Get("Authorization")
+		if authHeader == "" {
+			ctx.Next()
+			return
+		}
 		authHeaders := strings.Split(authHeader, " ")
 		if len(authHeaders) != 2 {
-			ctx.Next()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			ctx.Abort()
 			return
 		}
 		tokenString := authHeaders[1]
 		token, err := utils.ParseToken(tokenString)
 		if err != nil {
-			ctx.Next()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			ctx.Abort()
 			return
 		}
-		if utils.IsTokenTTLExpired(token.Ttl) {
-			ctx.Next()
+		if utils.IsExpired(token.Exp) || token.TokenType != "auth" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			ctx.Abort()
 			return
 		}
-		ctx.Set("uid", token.Id)
+		ctx.Set("uid", token.Sub)
 		ctx.Next()
 	}
 }

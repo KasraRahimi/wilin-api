@@ -24,6 +24,7 @@ func New(db *sql.DB) (*gin.Engine, error) {
 
 	router.POST("/login", server.HandleLogin)
 	router.POST("/signup", server.HandleSignup)
+	router.POST("/refresh", server.HandleRefresh)
 
 	router.GET("/kalan", server.VerifyPermissions(permissions.VIEW_WORD), server.HandleGetKalan)
 	router.GET("/kalan/paginated", server.VerifyPermissions(permissions.VIEW_WORD), server.HandleGetKalanPaginated)
