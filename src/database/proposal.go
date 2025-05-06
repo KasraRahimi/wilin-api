@@ -5,25 +5,61 @@ import (
 	"fmt"
 )
 
+type Scanner interface {
+	Scan(dest ...any) error
+}
+
 type ProposalModel struct {
 	Id     int
-	userId int
+	UserId int
 	Entry  string
 	Pos    string
 	Gloss  string
 	Notes  string
 }
 
+type ProposalUsernameModel struct {
+	Id       int
+	UserId   int
+	Username string
+	Entry    string
+	Pos      string
+	Gloss    string
+	Notes    string
+}
+
 type ProposalDao struct {
 	Db *sql.DB
 }
 
+func (dao *ProposalDao) scanProposal(row Scanner, proposal *ProposalModel) error {
+	return row.Scan(
+		&proposal.Id,
+		&proposal.UserId,
+		&proposal.Entry,
+		&proposal.Pos,
+		&proposal.Gloss,
+		&proposal.Notes,
+	)
+}
+
+func (dao *ProposalDao) scanProposalUsername(row Scanner, proposal *ProposalUsernameModel) error {
+	return row.Scan(
+		&proposal.Id,
+		&proposal.UserId,
+		&proposal.Username,
+		&proposal.Entry,
+		&proposal.Pos,
+		&proposal.Gloss,
+		&proposal.Notes,
+	)
+}
+
 func (dao *ProposalDao) CreateProposal(proposal *ProposalModel) (int64, error) {
-	query := `INSERT INTO proposals (user_id, entry, pos, gloss, notes) 
-		VALUES (?, ?, ?, ?, ?)`
+	query := `INSERT INTO proposals (user_id, entry, pos, gloss, notes) VALUES (?, ?, ?, ?, ?)`
 	result, err := dao.Db.Exec(
 		query,
-		proposal.userId,
+		proposal.UserId,
 		proposal.Entry,
 		proposal.Pos,
 		proposal.Gloss,
@@ -37,4 +73,44 @@ func (dao *ProposalDao) CreateProposal(proposal *ProposalModel) (int64, error) {
 		return 0, fmt.Errorf("CreateProposal, failed to fetch proposal id: %w", err)
 	}
 	return id, nil
+}
+
+func (dao *ProposalDao) ReadAllProposals() ([]ProposalModel, error) {
+	query := `SELECT id, user_id, entry, pos, gloss, notes FROM proposals`
+	rows, err := dao.Db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("ReadAllProposals, failed to query proposals: %w", err)
+	}
+	defer rows.Close()
+	var proposals []ProposalModel
+	for rows.Next() {
+		var proposal ProposalModel
+		err = dao.scanProposal(rows, &proposal)
+		if err != nil {
+			return nil, fmt.Errorf("ReadAllProposals, failed to scan proposals: %w", err)
+		}
+	}
+	return proposals, nil
+}
+
+func (dao *ProposalDao) ReadAllProposalsWithUsername() ([]ProposalUsernameModel, error) {
+	query := `
+		SELECT p.id, p.user_id, u.username, p.entry, p.pos, p.gloss, p.notes
+		FROM proposals p
+		JOIN users u ON u.id = p.user_id
+		`
+	rows, err := dao.Db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("ReadAllProposalsWithUsername, failed to query proposals: %w", err)
+	}
+	defer rows.Close()
+	var proposals []ProposalUsernameModel
+	for rows.Next() {
+		var proposal ProposalUsernameModel
+		err := dao.scanProposalUsername(rows, &proposal)
+		if err != nil {
+			return nil, fmt.Errorf("ReadAllProposalsWithUsername, failed to scan proposals: %w", err)
+		}
+	}
+	return proposals, nil
 }
