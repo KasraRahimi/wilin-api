@@ -19,18 +19,6 @@ type WilinWordJson struct {
 	Notes string `json:"notes" form:"notes"`
 }
 
-var (
-	errInvalidFormat = errors.New("invalid format")
-	errNoId          = errors.New("no id")
-	errNoEntry       = errors.New("no entry")
-	errNoPos         = errors.New("no pos")
-	errNoGloss       = errors.New("no gloss")
-)
-
-func getErrorJson(err string) gin.H {
-	return gin.H{"error": err}
-}
-
 func getJsonFromWordModel(word *database.WordModel) WilinWordJson {
 	return WilinWordJson{word.Id, word.Entry, word.Pos, word.Gloss, word.Notes}
 }
@@ -183,13 +171,13 @@ func (s *Server) HandlePostKalan(ctx *gin.Context) {
 	var kalanJson WilinWordJson
 	if err := ctx.ShouldBind(&kalanJson); err != nil {
 		ctx.Error(err)
-		ctx.JSON(http.StatusBadRequest, getErrorJson(errInvalidFormat.Error()))
+		ctx.JSON(http.StatusBadRequest, GetErrorJson(errInvalidFormat.Error()))
 		return
 	}
 
 	if err := s.validateKalanJson(&kalanJson); err != nil && !errors.Is(err, errNoId) {
 		ctx.Error(err)
-		ctx.JSON(http.StatusBadRequest, getErrorJson(err.Error()))
+		ctx.JSON(http.StatusBadRequest, GetErrorJson(err.Error()))
 		return
 	}
 
@@ -197,7 +185,7 @@ func (s *Server) HandlePostKalan(ctx *gin.Context) {
 	id, err := s.WordDao.CreateWord(&word)
 	if err != nil {
 		ctx.Error(err)
-		ctx.JSON(http.StatusInternalServerError, getErrorJson("something went wrong"))
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong"))
 		return
 	}
 
@@ -230,13 +218,13 @@ func (s *Server) HandlePutKalan(ctx *gin.Context) {
 	var kalanJson WilinWordJson
 	if err := ctx.ShouldBind(&kalanJson); err != nil {
 		ctx.Error(err)
-		ctx.JSON(http.StatusBadRequest, getErrorJson(errInvalidFormat.Error()))
+		ctx.JSON(http.StatusBadRequest, GetErrorJson(errInvalidFormat.Error()))
 		return
 	}
 
 	if err := s.validateKalanJson(&kalanJson); err != nil {
 		ctx.Error(err)
-		ctx.JSON(http.StatusBadRequest, getErrorJson(err.Error()))
+		ctx.JSON(http.StatusBadRequest, GetErrorJson(err.Error()))
 		return
 	}
 
@@ -253,7 +241,7 @@ func (s *Server) HandlePutKalan(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusInternalServerError, getErrorJson("something went wrong"))
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong"))
 		return
 	}
 

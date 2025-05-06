@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"wilin/src/database"
 	"wilin/src/server/utils"
@@ -8,10 +9,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	errInvalidFormat = errors.New("invalid format")
+	errNoId          = errors.New("no id")
+	errNoEntry       = errors.New("no entry")
+	errNoPos         = errors.New("no pos")
+	errNoGloss       = errors.New("no gloss")
+)
+
 type Server struct {
 	WordDao          *database.WordDao
 	UserDao          *database.UserDao
+	ProposalDao      *database.ProposalDao
 	fakePasswordHash string
+}
+
+func GetErrorJson(err string) gin.H {
+	return gin.H{"error": err}
 }
 
 func (s *Server) GenerateFakePassword() {
