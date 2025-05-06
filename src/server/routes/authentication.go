@@ -290,7 +290,7 @@ func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerF
 
 		var role roles.Role
 		if user == nil {
-			role = roles.USER
+			role = roles.NON_USER
 		} else {
 			role = user.Role
 		}
