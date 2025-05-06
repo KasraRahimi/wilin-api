@@ -7,10 +7,12 @@ import (
 type Permission string
 
 const (
-	VIEW_WORD   Permission = "view:word"
-	ADD_WORD    Permission = "add:word"
-	DELETE_WORD Permission = "delete:word"
-	MODIFY_WORD Permission = "modify:word"
+	VIEW_WORD         Permission = "view:word"
+	ADD_WORD          Permission = "add:word"
+	DELETE_WORD       Permission = "delete:word"
+	MODIFY_WORD       Permission = "modify:word"
+	ADD_PROPOSAL      Permission = "add:proposal"
+	VIEW_ALL_PROPOSAL Permission = "view:all:proposal"
 )
 
 var adminPermissions = []Permission{
@@ -18,10 +20,12 @@ var adminPermissions = []Permission{
 	ADD_WORD,
 	DELETE_WORD,
 	MODIFY_WORD,
+	VIEW_ALL_PROPOSAL,
 }
 
 var userPermissions = []Permission{
 	VIEW_WORD,
+	ADD_PROPOSAL,
 }
 
 var nonUserPermissions = []Permission{
