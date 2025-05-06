@@ -11,8 +11,9 @@ import (
 
 func New(db *sql.DB) (*gin.Engine, error) {
 	server := routes.Server{
-		WordDao: &database.WordDao{Db: db},
-		UserDao: &database.UserDao{Db: db},
+		WordDao:     &database.WordDao{Db: db},
+		UserDao:     &database.UserDao{Db: db},
+		ProposalDao: &database.ProposalDao{Db: db},
 	}
 	server.GenerateFakePassword()
 
@@ -33,6 +34,8 @@ func New(db *sql.DB) (*gin.Engine, error) {
 	router.POST("/kalan", server.VerifyPermissions(permissions.ADD_WORD), server.HandlePostKalan)
 	router.DELETE("/kalan/:id", server.VerifyPermissions(permissions.DELETE_WORD), server.HandleDeleteKalan)
 	router.PUT("/kalan", server.VerifyPermissions(permissions.MODIFY_WORD), server.HandlePutKalan)
+
+	router.POST("/proposal", server.VerifyPermissions(permissions.ADD_PROPOSAL), server.HandlePostProposal)
 
 	return router, nil
 }
