@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"database/sql"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -33,6 +34,18 @@ func NewProposalDTOFromUsernameModel(model *database.ProposalUsernameModel) Prop
 		Id:       model.Id,
 		UserId:   model.UserId,
 		Username: model.Username,
+		Entry:    model.Entry,
+		Pos:      model.Pos,
+		Gloss:    model.Gloss,
+		Notes:    model.Notes,
+	}
+}
+
+func NewProposalDTOFromModel(model *database.ProposalModel, username string) ProposalDTO {
+	return ProposalDTO{
+		Id:       model.Id,
+		UserId:   model.UserId,
+		Username: username,
 		Entry:    model.Entry,
 		Pos:      model.Pos,
 		Gloss:    model.Gloss,
@@ -104,6 +117,31 @@ func (s *Server) HandleGetAllProposals(ctx *gin.Context) {
 	var proposalsDTO []ProposalDTO
 	for _, model := range proposalModels {
 		proposalsDTO = append(proposalsDTO, NewProposalDTOFromUsernameModel(&model))
+	}
+	ctx.JSON(http.StatusOK, proposalsDTO)
+}
+
+func (s *Server) HandleGetMyProposals(ctx *gin.Context) {
+	user, err := s.getUserFromContext(ctx)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("could not fetch user"))
+		return
+	}
+	proposals, err := s.ProposalDao.ReadProposalsByUserId(user.Id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, nil)
+			return
+		}
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson(err.Error()))
+		return
+	}
+	var proposalsDTO []ProposalDTO
+	for _, model := range proposals {
+		proposal := NewProposalDTOFromModel(&model, user.Username)
+		proposalsDTO = append(proposalsDTO, proposal)
 	}
 	ctx.JSON(http.StatusOK, proposalsDTO)
 }
