@@ -43,8 +43,9 @@ func (dao *ProposalDao) scanProposal(row Scanner, proposal *ProposalModel) error
 	)
 }
 
-func (dao *ProposalDao) scanProposalUsername(row Scanner, proposal *ProposalUsernameModel) error {
-	return row.Scan(
+func (dao *ProposalDao) scanProposalUsername(row Scanner) (*ProposalUsernameModel, error) {
+	var proposal ProposalUsernameModel
+	err := row.Scan(
 		&proposal.Id,
 		&proposal.UserId,
 		&proposal.Username,
@@ -53,6 +54,10 @@ func (dao *ProposalDao) scanProposalUsername(row Scanner, proposal *ProposalUser
 		&proposal.Gloss,
 		&proposal.Notes,
 	)
+	if err != nil {
+		return nil, err
+	}
+	return &proposal, nil
 }
 
 func (dao *ProposalDao) CreateProposal(proposal *ProposalModel) (int64, error) {
@@ -106,11 +111,11 @@ func (dao *ProposalDao) ReadAllProposalsWithUsername() ([]ProposalUsernameModel,
 	defer rows.Close()
 	var proposals []ProposalUsernameModel
 	for rows.Next() {
-		var proposal ProposalUsernameModel
-		err := dao.scanProposalUsername(rows, &proposal)
+		proposal, err := dao.scanProposalUsername(rows)
 		if err != nil {
 			return nil, fmt.Errorf("ReadAllProposalsWithUsername, failed to scan proposals: %w", err)
 		}
+		proposals = append(proposals, *proposal)
 	}
 	return proposals, nil
 }
