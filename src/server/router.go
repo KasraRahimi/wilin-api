@@ -36,6 +36,7 @@ func New(db *sql.DB) (*gin.Engine, error) {
 	router.PUT("/kalan", server.VerifyPermissions(permissions.MODIFY_WORD), server.HandlePutKalan)
 
 	router.POST("/proposal", server.VerifyPermissions(permissions.ADD_PROPOSAL), server.HandlePostProposal)
+	router.GET("/proposal", server.VerifyPermissions(permissions.VIEW_ALL_PROPOSAL), server.HandleGetAllProposals)
 
 	return router, nil
 }

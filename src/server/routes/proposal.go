@@ -8,13 +8,13 @@ import (
 )
 
 type ProposalDTO struct {
-	Id       int    `json:"id"`
-	UserId   int    `json:"userId"`
-	Username string `json:"username"`
-	Entry    string `json:"entry"`
-	Pos      string `json:"pos"`
-	Gloss    string `json:"gloss"`
-	Notes    string `json:"notes"`
+	Id       int    `json:"id" form:"id"`
+	UserId   int    `json:"userId" form:"userId"`
+	Username string `json:"username" form:"username"`
+	Entry    string `json:"entry" form:"entry"`
+	Pos      string `json:"pos" form:"pos"`
+	Gloss    string `json:"gloss" form:"gloss"`
+	Notes    string `json:"notes" form:"notes"`
 }
 
 func (p *ProposalDTO) ToModel() database.ProposalModel {
@@ -25,6 +25,18 @@ func (p *ProposalDTO) ToModel() database.ProposalModel {
 		Pos:    p.Pos,
 		Gloss:  p.Gloss,
 		Notes:  p.Notes,
+	}
+}
+
+func NewProposalDTOFromUsernameModel(model *database.ProposalUsernameModel) ProposalDTO {
+	return ProposalDTO{
+		Id:       model.Id,
+		UserId:   model.UserId,
+		Username: model.Username,
+		Entry:    model.Entry,
+		Pos:      model.Pos,
+		Gloss:    model.Gloss,
+		Notes:    model.Notes,
 	}
 }
 
@@ -80,4 +92,18 @@ func (s *Server) HandlePostProposal(ctx *gin.Context) {
 
 	proposal.Id = int(id)
 	ctx.JSON(http.StatusCreated, proposal)
+}
+
+func (s *Server) HandleGetAllProposals(ctx *gin.Context) {
+	proposalModels, err := s.ProposalDao.ReadAllProposalsWithUsername()
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong fetching all proposals"))
+		return
+	}
+	var proposalsDTO []ProposalDTO
+	for _, model := range proposalModels {
+		proposalsDTO = append(proposalsDTO, NewProposalDTOFromUsernameModel(&model))
+	}
+	ctx.JSON(http.StatusOK, proposalsDTO)
 }
