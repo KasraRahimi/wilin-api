@@ -297,8 +297,14 @@ func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerF
 
 		for _, permission := range perms {
 			if !permissions.CanRolePermission(role, permission) {
+				if user == nil {
+					ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+					ctx.Abort()
+					return
+				}
 				ctx.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
 				ctx.Abort()
+				return
 			}
 		}
 		ctx.Next()
