@@ -16,6 +16,8 @@ var (
 	errNoPos         = errors.New("no pos")
 	errNoGloss       = errors.New("no gloss")
 	errNoUserID      = errors.New("no user id")
+
+	errNoUserFromCtx = errors.New("user could not be fetched")
 )
 
 type Server struct {
