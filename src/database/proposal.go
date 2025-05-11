@@ -142,3 +142,22 @@ func (dao *ProposalDao) ReadProposalsByUserId(userID int) ([]ProposalModel, erro
 	}
 	return proposals, nil
 }
+
+func (dao *ProposalDao) ReadProposalById(id int) (*ProposalModel, error) {
+	query := `SELECT id, user_id, entry, pos, gloss, notes FROM proposals WHERE id = ?`
+	row := dao.Db.QueryRow(query, id)
+	proposal, err := dao.scanProposal(row)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan proposal: %w", err)
+	}
+	return proposal, nil
+}
+
+func (dao *ProposalDao) Delete(model *ProposalModel) error {
+	query := `DELETE FROM proposals WHERE id = ?`
+	_, err := dao.Db.Exec(query, model.Id)
+	if err != nil {
+		return fmt.Errorf("failed to delete proposal: %w", err)
+	}
+	return nil
+}
