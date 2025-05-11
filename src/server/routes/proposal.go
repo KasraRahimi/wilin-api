@@ -146,5 +146,10 @@ func (s *Server) HandleGetMyProposals(ctx *gin.Context) {
 		proposal := NewProposalDTOFromModel(&model, user.Username)
 		proposalsDTO = append(proposalsDTO, proposal)
 	}
+
+	if len(proposalsDTO) == 0 {
+		ctx.JSON(http.StatusNotFound, []ProposalDTO{})
+		return
+	}
 	ctx.JSON(http.StatusOK, proposalsDTO)
 }
