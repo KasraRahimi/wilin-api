@@ -15,6 +15,7 @@ var (
 	errNoEntry       = errors.New("no entry")
 	errNoPos         = errors.New("no pos")
 	errNoGloss       = errors.New("no gloss")
+	errNoUserID      = errors.New("no user id")
 )
 
 type Server struct {

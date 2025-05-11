@@ -63,6 +63,9 @@ func (s *Server) validateProposalJSON(dto *ProposalDTO) error {
 	if dto.Gloss == "" {
 		return errNoGloss
 	}
+	if dto.UserId == 0 {
+		return errNoUserID
+	}
 	if dto.Id == 0 {
 		return errNoId
 	}
