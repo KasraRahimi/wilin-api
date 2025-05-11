@@ -189,7 +189,7 @@ func (s *Server) HandleDeleteProposal(ctx *gin.Context) {
 	if !permissions.CanRolePermission(user.Role, permissions.DELETE_ALL_PROPOSAL) {
 		canUserDeleteSelfProposal := permissions.CanRolePermission(user.Role, permissions.DELETE_SELF_PROPOSAL)
 		isOwner := user.Id == proposal.UserId
-		if !canUserDeleteSelfProposal && !isOwner {
+		if !canUserDeleteSelfProposal || !isOwner {
 			ctx.JSON(http.StatusForbidden, GetErrorJson("permission denied"))
 			return
 		}

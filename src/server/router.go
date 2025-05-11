@@ -38,7 +38,11 @@ func New(db *sql.DB) (*gin.Engine, error) {
 	router.POST("/proposal", server.VerifyPermissionsAll(permissions.ADD_PROPOSAL), server.HandlePostProposal)
 	router.GET("/proposal", server.VerifyPermissionsAll(permissions.VIEW_ALL_PROPOSAL), server.HandleGetAllProposals)
 	router.GET("/proposal/me", server.VerifyPermissionsAll(permissions.VIEW_SELF_PROPOSAL), server.HandleGetMyProposals)
-	router.DELETE("/proposal/:id")
+	router.DELETE(
+		"/proposal/:id",
+		server.VerifyPermissionsAny(permissions.DELETE_ALL_PROPOSAL, permissions.DELETE_SELF_PROPOSAL),
+		server.HandleDeleteProposal,
+	)
 
 	return router, nil
 }

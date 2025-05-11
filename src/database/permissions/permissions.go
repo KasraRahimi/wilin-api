@@ -38,8 +38,8 @@ var permissionArray = map[roles.Role][]Permission{
 		VIEW_WORD,
 		ADD_PROPOSAL,
 		VIEW_SELF_PROPOSAL,
-		MODIFY_ALL_PROPOSAL,
-		DELETE_ALL_PROPOSAL,
+		MODIFY_SELF_PROPOSAL,
+		DELETE_SELF_PROPOSAL,
 	},
 	roles.NON_USER: {
 		VIEW_WORD,
