@@ -16,24 +16,24 @@ const (
 	VIEW_SELF_PROPOSAL Permission = "view:self:proposal"
 )
 
-var adminPermissions = []Permission{
-	VIEW_WORD,
-	ADD_WORD,
-	DELETE_WORD,
-	MODIFY_WORD,
-	ADD_PROPOSAL,
-	VIEW_ALL_PROPOSAL,
-	VIEW_SELF_PROPOSAL,
-}
-
-var userPermissions = []Permission{
-	VIEW_WORD,
-	ADD_PROPOSAL,
-	VIEW_SELF_PROPOSAL,
-}
-
-var nonUserPermissions = []Permission{
-	VIEW_WORD,
+var permissionArray = map[roles.Role][]Permission{
+	roles.ADMIN: {
+		VIEW_WORD,
+		ADD_WORD,
+		DELETE_WORD,
+		MODIFY_WORD,
+		ADD_PROPOSAL,
+		VIEW_ALL_PROPOSAL,
+		VIEW_SELF_PROPOSAL,
+	},
+	roles.USER: {
+		VIEW_WORD,
+		ADD_PROPOSAL,
+		VIEW_SELF_PROPOSAL,
+	},
+	roles.NON_USER: {
+		VIEW_WORD,
+	},
 }
 
 func isPermissionInArray(permission Permission, permissionArray []Permission) bool {
@@ -46,14 +46,5 @@ func isPermissionInArray(permission Permission, permissionArray []Permission) bo
 }
 
 func CanRolePermission(role roles.Role, permission Permission) bool {
-	switch role {
-	case roles.ADMIN:
-		return isPermissionInArray(permission, adminPermissions)
-	case roles.USER:
-		return isPermissionInArray(permission, userPermissions)
-	case roles.NON_USER:
-		return isPermissionInArray(permission, nonUserPermissions)
-	default:
-		return false
-	}
+	return isPermissionInArray(permission, permissionArray[role])
 }
