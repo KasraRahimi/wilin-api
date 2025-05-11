@@ -316,13 +316,16 @@ func (s *Server) getUserFromContext(ctx *gin.Context) (*database.UserModel, erro
 	if !exists {
 		return nil, nil
 	}
+
 	id, err := strconv.Atoi(uid.(string))
 	if err != nil {
 		return nil, err
 	}
+
 	user, err := s.UserDao.ReadUserById(id)
 	if err != nil {
 		return nil, err
 	}
+
 	return user, nil
 }
