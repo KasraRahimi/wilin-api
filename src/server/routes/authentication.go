@@ -279,7 +279,7 @@ func (s *Server) Authentication() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerFunc {
+func (s *Server) VerifyPermissionsAll(perms ...permissions.Permission) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		user, err := s.getUserFromContext(ctx)
 		if err != nil {
@@ -308,6 +308,38 @@ func (s *Server) VerifyPermissions(perms ...permissions.Permission) gin.HandlerF
 			}
 		}
 		ctx.Next()
+	}
+}
+
+func (s *Server) VerifyPermissionsAny(perms ...permissions.Permission) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		user, err := s.getUserFromContext(ctx)
+		if err != nil {
+			ctx.Error(err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
+			return
+		}
+
+		var role roles.Role
+		if user == nil {
+			role = roles.NON_USER
+		} else {
+			role = user.Role
+		}
+
+		for _, permission := range perms {
+			if permissions.CanRolePermission(role, permission) {
+				ctx.Next()
+				return
+			}
+		}
+		if user == nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			ctx.Abort()
+			return
+		}
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
+		ctx.Abort()
 	}
 }
 

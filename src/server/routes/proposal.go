@@ -5,7 +5,9 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"wilin/src/database"
+	"wilin/src/database/permissions"
 )
 
 type ProposalDTO struct {
@@ -152,4 +154,53 @@ func (s *Server) HandleGetMyProposals(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, proposalsDTO)
+}
+
+func (s *Server) HandleDeleteProposal(ctx *gin.Context) {
+	user, err := s.getUserFromContext(ctx)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson(errNoUserFromCtx.Error()))
+		return
+	}
+	if user == nil {
+		ctx.JSON(http.StatusUnauthorized, GetErrorJson("unauthorized"))
+		return
+	}
+
+	idParam := ctx.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, GetErrorJson("invalid id"))
+		return
+	}
+
+	proposal, err := s.ProposalDao.ReadProposalById(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.Status(http.StatusNotFound)
+			return
+		}
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong"))
+		return
+	}
+
+	if !permissions.CanRolePermission(user.Role, permissions.DELETE_ALL_PROPOSAL) {
+		canUserDeleteSelfProposal := permissions.CanRolePermission(user.Role, permissions.DELETE_SELF_PROPOSAL)
+		isOwner := user.Id == proposal.UserId
+		if !canUserDeleteSelfProposal && !isOwner {
+			ctx.JSON(http.StatusForbidden, GetErrorJson("permission denied"))
+			return
+		}
+	}
+
+	err = s.ProposalDao.Delete(proposal)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong"))
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }
