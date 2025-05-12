@@ -265,6 +265,7 @@ func (s *Server) Authentication() gin.HandlerFunc {
 		tokenString := authHeaders[1]
 		token, err := utils.ParseToken(tokenString)
 		if err != nil {
+			ctx.Error(err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			ctx.Abort()
 			return
