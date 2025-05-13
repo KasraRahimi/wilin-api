@@ -161,3 +161,14 @@ func (dao *ProposalDao) Delete(model *ProposalModel) error {
 	}
 	return nil
 }
+
+func (dao *ProposalDao) Update(model *ProposalModel) error {
+	query := `UPDATE proposals 
+		SET user_id = ?, entry = ?, pos = ?, gloss = ?, notes = ?
+		WHERE id = ?`
+	_, err := dao.Db.Exec(query, model.UserId, model.Entry, model.Pos, model.Gloss, model.Notes, model.Id)
+	if err != nil {
+		return fmt.Errorf("failed to update proposal: %w", err)
+	}
+	return nil
+}
