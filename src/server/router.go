@@ -43,6 +43,11 @@ func New(db *sql.DB) (*gin.Engine, error) {
 		server.VerifyPermissionsAny(permissions.DELETE_ALL_PROPOSAL, permissions.DELETE_SELF_PROPOSAL),
 		server.HandleDeleteProposal,
 	)
+	router.PUT(
+		"/proposal",
+		server.VerifyPermissionsAny(permissions.MODIFY_ALL_PROPOSAL, permissions.MODIFY_SELF_PROPOSAL),
+		server.HandlePutProposal,
+	)
 
 	return router, nil
 }

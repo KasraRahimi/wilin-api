@@ -65,9 +65,6 @@ func (s *Server) validateProposalJSON(dto *ProposalDTO) error {
 	if dto.Gloss == "" {
 		return errNoGloss
 	}
-	if dto.UserId == 0 {
-		return errNoUserID
-	}
 	if dto.Id == 0 {
 		return errNoId
 	}
@@ -203,4 +200,61 @@ func (s *Server) HandleDeleteProposal(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusNoContent)
+}
+
+func (s *Server) HandlePutProposal(ctx *gin.Context) {
+	user, err := s.getUserFromContext(ctx)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson(errNoUserFromCtx.Error()))
+		return
+	}
+	if user == nil {
+		ctx.JSON(http.StatusUnauthorized, GetErrorJson("unauthorized"))
+		return
+	}
+
+	var proposalDTO ProposalDTO
+	if err := ctx.ShouldBind(&proposalDTO); err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusBadRequest, GetErrorJson(errInvalidFormat.Error()))
+		return
+	}
+	if err = s.validateProposalJSON(&proposalDTO); err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusBadRequest, GetErrorJson(err.Error()))
+		return
+	}
+
+	originalProposal, err := s.ProposalDao.ReadProposalById(proposalDTO.Id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.Status(http.StatusNotFound)
+			return
+		}
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong"))
+		return
+	}
+
+	if !permissions.CanRolePermission(user.Role, permissions.MODIFY_ALL_PROPOSAL) {
+		canUserDeleteSelfProposal := permissions.CanRolePermission(user.Role, permissions.DELETE_SELF_PROPOSAL)
+		isOwner := user.Id == originalProposal.UserId
+		if !canUserDeleteSelfProposal || !isOwner {
+			ctx.JSON(http.StatusForbidden, GetErrorJson("permission denied"))
+			return
+		}
+	}
+
+	proposalDTO.UserId = originalProposal.UserId
+	newProposal := proposalDTO.ToModel()
+	err = s.ProposalDao.Update(&newProposal)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong"))
+		return
+	}
+
+	newProposalDTO := NewProposalDTOFromModel(&newProposal, "")
+	ctx.JSON(http.StatusOK, newProposalDTO)
 }
