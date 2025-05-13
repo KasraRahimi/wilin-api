@@ -153,6 +153,49 @@ func (s *Server) HandleGetMyProposals(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, proposalsDTO)
 }
 
+func (s *Server) HandleGetProposalById(ctx *gin.Context) {
+	user, err := s.getUserFromContext(ctx)
+	if err != nil {
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson(errNoUserFromCtx.Error()))
+		return
+	}
+	if user == nil {
+		ctx.JSON(http.StatusUnauthorized, GetErrorJson("unauthorized"))
+		return
+	}
+
+	idParam := ctx.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, GetErrorJson("invalid id"))
+		return
+	}
+
+	proposal, err := s.ProposalDao.ReadProposalById(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.Status(http.StatusNotFound)
+			return
+		}
+		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, GetErrorJson("something went wrong"))
+		return
+	}
+
+	if !permissions.CanRolePermission(user.Role, permissions.VIEW_ALL_PROPOSAL) {
+		canUserViewSelfProposal := permissions.CanRolePermission(user.Role, permissions.VIEW_SELF_PROPOSAL)
+		isOwner := user.Id == proposal.UserId
+		if !canUserViewSelfProposal || !isOwner {
+			ctx.JSON(http.StatusForbidden, GetErrorJson("permission denied"))
+			return
+		}
+	}
+
+	proposalDTO := NewProposalDTOFromModel(proposal, "")
+	ctx.JSON(http.StatusOK, proposalDTO)
+}
+
 func (s *Server) HandleDeleteProposal(ctx *gin.Context) {
 	user, err := s.getUserFromContext(ctx)
 	if err != nil {
