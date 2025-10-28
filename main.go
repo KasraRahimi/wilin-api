@@ -1,11 +1,23 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
+	"database/sql"
+	"fmt"
 	"log"
-	"wilin/src/database"
-	"wilin/src/server"
+	"os"
+	"wilin/server"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
+
+func getDataSource() string {
+	username := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+	address := os.Getenv("DB_ADDRESS")
+	dbName := os.Getenv("DB_NAME")
+	return fmt.Sprintf("%s:%s@(%s)/%s", username, password, address, dbName)
+}
 
 func main() {
 	err := godotenv.Load()
@@ -13,27 +25,11 @@ func main() {
 		log.Fatalf("Error loading .env file: %v\n", err)
 	}
 
-	db, err := database.GetConnection()
+	db, err := sql.Open("mysql", getDataSource())
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v\n", err)
+		log.Fatalf("Error opening database connection: %v\n", err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatalf("Error pinging database: %v\n", err)
-	}
-
-	err = database.CreateDatabaseTables(db)
-	if err != nil {
-		log.Fatalf("Error creating tables: %v\n", err)
-	}
-
-	router, err := server.New(db)
-	if err != nil {
-		log.Fatalf("Error creating server: %v\n", err)
-	}
-	err = router.Run("0.0.0.0:8080")
-	if err != nil {
-		log.Fatal(err)
-	}
+	server := server.New(db)
+	server.Logger.Fatal(server.Start(":8080"))
 }
