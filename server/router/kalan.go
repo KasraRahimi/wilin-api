@@ -27,8 +27,10 @@ func NewKalanDTO(id int, entry string, pos string, gloss string, notes string) K
 }
 
 type KalanArrayDTO struct {
-	Kalans    []KalanDTO `json:"kalans"`
-	PageCount int        `json:"pageCount"`
+	Kalans     []KalanDTO `json:"kalans"`
+	Page       int        `json:"page"`
+	KalanCount int        `json:"kalanCount"`
+	PageCount  int        `json:"pageCount"`
 }
 
 type SearchQueryDTO struct {
@@ -46,6 +48,10 @@ type Fields struct {
 }
 
 const PAGE_SIZE = 100
+
+func getPageCount(kalanCount int, pageSize int) int {
+	return ((kalanCount - 1) / pageSize) + 1
+}
 
 func NewFields(fieldsArray []string) Fields {
 	if len(fieldsArray) < 1 {
@@ -95,6 +101,7 @@ func (r *Router) GetKalanBySearch(ctx echo.Context) error {
 		Ispos:   fields.IsPos,
 		Isgloss: fields.IsGloss,
 		Isnotes: fields.IsNotes,
+		Sort:    searchQueryDTO.Sort,
 		Limit:   PAGE_SIZE,
 		Offset:  int32(PAGE_SIZE * searchQueryDTO.Page),
 	}
@@ -109,6 +116,17 @@ func (r *Router) GetKalanBySearch(ctx echo.Context) error {
 		kalanDTO := NewKalanDTO(int(kalan.ID), kalan.Entry, kalan.Pos, kalan.Gloss, kalan.Notes)
 		kalanArrayDTO.Kalans = append(kalanArrayDTO.Kalans, kalanDTO)
 	}
+
+	kalanCount, err := r.kalanQueries.ReadKalanCount(r.ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, NewErrorJson("Could not fetch words"))
+	}
+
+	pageCount := getPageCount(int(kalanCount), PAGE_SIZE)
+
+	kalanArrayDTO.Page = searchQueryDTO.Page
+	kalanArrayDTO.KalanCount = int(kalanCount)
+	kalanArrayDTO.PageCount = pageCount
 
 	return ctx.JSON(http.StatusOK, kalanArrayDTO)
 }
