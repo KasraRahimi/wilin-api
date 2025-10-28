@@ -79,3 +79,104 @@ func (q *Queries) ReadKalanByEntry(ctx context.Context, entry string) (Kalan, er
 	)
 	return i, err
 }
+
+const readKalanById = `-- name: ReadKalanById :one
+SELECT id, entry, pos, gloss, notes FROM kalan WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) ReadKalanById(ctx context.Context, id int32) (Kalan, error) {
+	row := q.db.QueryRowContext(ctx, readKalanById, id)
+	var i Kalan
+	err := row.Scan(
+		&i.ID,
+		&i.Entry,
+		&i.Pos,
+		&i.Gloss,
+		&i.Notes,
+	)
+	return i, err
+}
+
+const readKalanBySearch = `-- name: ReadKalanBySearch :many
+SELECT id, entry, pos, gloss, notes
+FROM kalan
+WHERE (
+        ? = True
+        AND entry LIKE CONCAT('%', ?, '%')
+    )
+    OR (
+        ? = True
+        AND pos LIKE CONCAT('%', ?, '%')
+    )
+    OR (
+        ? = True
+        AND gloss LIKE CONCAT('%', ?, '%')
+    )
+    OR (
+        ? = True
+        AND notes LIKE CONCAT('%', ?, '%')
+    )
+ORDER BY
+    CASE ?
+        WHEN 'entry' THEN entry
+        WHEN 'pos' THEN pos
+        WHEN 'gloss' THEN gloss
+        WHEN 'notes' THEN notes
+        ELSE id
+    END
+LIMIT ?
+OFFSET
+    ?
+`
+
+type ReadKalanBySearchParams struct {
+	Isentry interface{}
+	Search  interface{}
+	Ispos   interface{}
+	Isgloss interface{}
+	Isnotes interface{}
+	Sort    interface{}
+	Limit   int32
+	Offset  int32
+}
+
+func (q *Queries) ReadKalanBySearch(ctx context.Context, arg ReadKalanBySearchParams) ([]Kalan, error) {
+	rows, err := q.db.QueryContext(ctx, readKalanBySearch,
+		arg.Isentry,
+		arg.Search,
+		arg.Ispos,
+		arg.Search,
+		arg.Isgloss,
+		arg.Search,
+		arg.Isnotes,
+		arg.Search,
+		arg.Sort,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Kalan
+	for rows.Next() {
+		var i Kalan
+		if err := rows.Scan(
+			&i.ID,
+			&i.Entry,
+			&i.Pos,
+			&i.Gloss,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
