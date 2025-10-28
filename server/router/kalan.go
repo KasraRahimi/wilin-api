@@ -48,13 +48,7 @@ type Fields struct {
 const PAGE_SIZE = 100
 
 func NewFields(fieldsArray []string) Fields {
-	var fields Fields
-	fields.IsEntry = slices.Contains(fieldsArray, "entry")
-	fields.IsPos = slices.Contains(fieldsArray, "pos")
-	fields.IsGloss = slices.Contains(fieldsArray, "gloss")
-	fields.IsNotes = slices.Contains(fieldsArray, "notes")
-
-	if !(fields.IsEntry || fields.IsPos || fields.IsGloss || fields.IsNotes) {
+	if len(fieldsArray) < 1 {
 		return Fields{
 			IsEntry: true,
 			IsPos:   true,
@@ -62,6 +56,11 @@ func NewFields(fieldsArray []string) Fields {
 			IsNotes: true,
 		}
 	}
+	var fields Fields
+	fields.IsEntry = slices.Contains(fieldsArray, "entry")
+	fields.IsPos = slices.Contains(fieldsArray, "pos")
+	fields.IsGloss = slices.Contains(fieldsArray, "gloss")
+	fields.IsNotes = slices.Contains(fieldsArray, "notes")
 	return fields
 }
 

@@ -16,6 +16,10 @@ func NewErrorJson(message string) ErrorJson {
 }
 
 func splitQuery(query string) []string {
+	if len(query) < 1 {
+		return []string{}
+	}
+
 	queries := strings.Split(query, ",")
 	for i := range queries {
 		queries[i] = strings.TrimSpace(queries[i])
