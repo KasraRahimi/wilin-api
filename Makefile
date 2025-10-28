@@ -21,7 +21,7 @@ list:
 
 $(TRG): $(MAIN) $(SRC)
 	mkdir -p $(TRG_DIR)
-	go build -o $@ $<
+	go build -o $@
 
 test:
 	go test -v ./...
