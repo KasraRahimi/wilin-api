@@ -2,6 +2,8 @@ package router
 
 import (
 	"net/http"
+	"slices"
+	"wilin/database/kalan"
 
 	"github.com/labstack/echo/v4"
 )
@@ -25,7 +27,42 @@ func NewKalanDTO(id int, entry string, pos string, gloss string, notes string) K
 }
 
 type KalanArrayDTO struct {
-	Kalans []KalanDTO `json:"kalans"`
+	Kalans    []KalanDTO `json:"kalans"`
+	PageCount int        `json:"pageCount"`
+}
+
+type SearchQueryDTO struct {
+	Search string `query:"search"`
+	Fields string `query:"fields"`
+	Sort   string `query:"sort"`
+	Page   int    `query:"page"`
+}
+
+type Fields struct {
+	IsEntry bool
+	IsPos   bool
+	IsGloss bool
+	IsNotes bool
+}
+
+const PAGE_SIZE = 100
+
+func NewFields(fieldsArray []string) Fields {
+	var fields Fields
+	fields.IsEntry = slices.Contains(fieldsArray, "entry")
+	fields.IsPos = slices.Contains(fieldsArray, "pos")
+	fields.IsGloss = slices.Contains(fieldsArray, "gloss")
+	fields.IsNotes = slices.Contains(fieldsArray, "notes")
+
+	if !(fields.IsEntry || fields.IsPos || fields.IsGloss || fields.IsNotes) {
+		return Fields{
+			IsEntry: true,
+			IsPos:   true,
+			IsGloss: true,
+			IsNotes: true,
+		}
+	}
+	return fields
 }
 
 func (r *Router) GetAllKalan(ctx echo.Context) error {
@@ -36,6 +73,39 @@ func (r *Router) GetAllKalan(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, NewErrorJson("Failed to fetch words"))
 	}
 
+	for _, kalan := range kalans {
+		kalanDTO := NewKalanDTO(int(kalan.ID), kalan.Entry, kalan.Pos, kalan.Gloss, kalan.Notes)
+		kalanArrayDTO.Kalans = append(kalanArrayDTO.Kalans, kalanDTO)
+	}
+
+	return ctx.JSON(http.StatusOK, kalanArrayDTO)
+}
+
+func (r *Router) GetKalanBySearch(ctx echo.Context) error {
+	var searchQueryDTO SearchQueryDTO
+	err := ctx.Bind(&searchQueryDTO)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, NewErrorJson("Invalid search"))
+	}
+
+	fields := NewFields(splitQuery(searchQueryDTO.Fields))
+
+	searchParams := kalan.ReadKalanBySearchParams{
+		Search:  searchQueryDTO.Search,
+		Isentry: fields.IsEntry,
+		Ispos:   fields.IsPos,
+		Isgloss: fields.IsGloss,
+		Isnotes: fields.IsNotes,
+		Limit:   PAGE_SIZE,
+		Offset:  int32(PAGE_SIZE * searchQueryDTO.Page),
+	}
+
+	kalans, err := r.kalanQueries.ReadKalanBySearch(r.ctx, searchParams)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, NewErrorJson("Could not fetch words"))
+	}
+
+	var kalanArrayDTO KalanArrayDTO
 	for _, kalan := range kalans {
 		kalanDTO := NewKalanDTO(int(kalan.ID), kalan.Entry, kalan.Pos, kalan.Gloss, kalan.Notes)
 		kalanArrayDTO.Kalans = append(kalanArrayDTO.Kalans, kalanDTO)
