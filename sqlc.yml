@@ -1,0 +1,18 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    name: "kalan"
+    queries: "sqlc/kalan/queries.sql"
+    schema: "sqlc/kalan/schema.sql"
+    gen:
+      go:
+        package: "kalan"
+        out: "database/kalan"
+  - engine: "mysql"
+    name: "user"
+    queries: "sqlc/users/queries.sql"
+    schema: "sqlc/users/schema.sql"
+    gen:
+      go:
+        package: "users"
+        out: "database/users"
