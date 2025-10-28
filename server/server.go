@@ -16,7 +16,7 @@ func helloWorld(ctx echo.Context) error {
 	return ctx.String(http.StatusOK, "Hello, World!")
 }
 
-const LOGGER_FORMAT = "${time_custom} | ${remote_ip} | ${method} ${path} | ${status} | ${latency_human}\n"
+const LOGGER_FORMAT = "\033[36m${time_custom}\033[0m | ${remote_ip} | \033[33m${method}\033[0m ${uri} | ${status} | ${latency_human}\n"
 const TIME_FORMAT = "02-Jan-2006 15:04:05"
 
 func newLoggerConfig(format string, timeFormat string) middleware.LoggerConfig {
