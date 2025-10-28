@@ -2,7 +2,7 @@ SRC_FILES=*.go
 MAIN_FILE=main.go
 TRG_FILE=$(MAIN_FILE:%.go=%)
 
-SRC_DIR=./src
+SRC_DIR=.
 MAIN_DIR=.
 TRG_DIR=./trg
 
