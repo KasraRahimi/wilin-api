@@ -122,8 +122,9 @@ ORDER BY
         WHEN 'pos' THEN pos
         WHEN 'gloss' THEN gloss
         WHEN 'notes' THEN notes
-        ELSE id
-    END
+        ELSE NULL
+    END,
+    id
 LIMIT ?
 OFFSET
     ?
@@ -179,4 +180,15 @@ func (q *Queries) ReadKalanBySearch(ctx context.Context, arg ReadKalanBySearchPa
 		return nil, err
 	}
 	return items, nil
+}
+
+const readKalanCount = `-- name: ReadKalanCount :one
+SELECT COUNT(*) FROM kalan
+`
+
+func (q *Queries) ReadKalanCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, readKalanCount)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }

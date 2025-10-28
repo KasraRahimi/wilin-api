@@ -35,8 +35,12 @@ ORDER BY
         WHEN 'pos' THEN pos
         WHEN 'gloss' THEN gloss
         WHEN 'notes' THEN notes
-        ELSE id
-    END
+        ELSE NULL
+    END,
+    id
 LIMIT ?
 OFFSET
     ?;
+
+-- name: ReadKalanCount :one
+SELECT COUNT(*) FROM kalan
