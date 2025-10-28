@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"strings"
 	"wilin/database/kalan"
 	"wilin/database/users"
 )
@@ -12,6 +13,14 @@ type ErrorJson struct {
 
 func NewErrorJson(message string) ErrorJson {
 	return ErrorJson{Error: message}
+}
+
+func splitQuery(query string) []string {
+	queries := strings.Split(query, ",")
+	for i := range queries {
+		queries[i] = strings.TrimSpace(queries[i])
+	}
+	return queries
 }
 
 type Router struct {
