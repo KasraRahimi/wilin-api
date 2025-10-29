@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"wilin.com/api/server"
+	"wilin.info/api/server"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"

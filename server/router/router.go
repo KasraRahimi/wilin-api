@@ -2,14 +2,27 @@ package router
 
 import (
 	"context"
+	"errors"
 	"strings"
-	"wilin.com/api/database/kalan"
-	"wilin.com/api/database/users"
+
+	"wilin.info/api/database/kalan"
+	"wilin.info/api/database/users"
 )
 
 type ErrorJson struct {
 	Error string `json:"error"`
 }
+
+var (
+	errInvalidFormat = errors.New("invalid format")
+	errNoId          = errors.New("no id")
+	errNoEntry       = errors.New("no entry")
+	errNoPos         = errors.New("no pos")
+	errNoGloss       = errors.New("no gloss")
+	errNoUserID      = errors.New("no user id")
+
+	errNoUserFromCtx = errors.New("user could not be fetched")
+)
 
 func NewErrorJson(message string) ErrorJson {
 	return ErrorJson{Error: message}

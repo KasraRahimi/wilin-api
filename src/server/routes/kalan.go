@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"wilin.com/api/src/database"
+	"wilin.info/api/src/database"
 
 	"github.com/gin-gonic/gin"
 )

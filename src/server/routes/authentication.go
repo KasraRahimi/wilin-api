@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"wilin.com/api/src/database"
-	"wilin.com/api/src/database/permissions"
-	"wilin.com/api/src/database/roles"
-	"wilin.com/api/src/server/utils"
+	"wilin.info/api/src/database"
+	"wilin.info/api/src/database/permissions"
+	"wilin.info/api/src/database/roles"
+	"wilin.info/api/src/server/utils"
 
 	"github.com/gin-gonic/gin"
 )

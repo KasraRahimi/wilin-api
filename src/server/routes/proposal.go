@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"wilin.com/api/src/database"
-	"wilin.com/api/src/database/permissions"
+	"wilin.info/api/src/database"
+	"wilin.info/api/src/database/permissions"
 )
 
 type ProposalDTO struct {

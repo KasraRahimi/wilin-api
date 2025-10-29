@@ -1,7 +1,7 @@
 package permissions
 
 import (
-	"wilin.com/api/src/database/roles"
+	"wilin.info/api/src/database/roles"
 )
 
 type Permission string

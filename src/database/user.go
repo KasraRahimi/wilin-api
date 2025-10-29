@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"wilin.com/api/src/database/roles"
+	"wilin.info/api/src/database/roles"
 )
 
 type UserModel struct {
