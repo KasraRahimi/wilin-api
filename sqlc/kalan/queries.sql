@@ -63,4 +63,4 @@ WHERE (
     );
 
 -- name: ReadKalanCount :one
-SELECT COUNT(*) FROM kalan
+SELECT COUNT(*) FROM kalan;
