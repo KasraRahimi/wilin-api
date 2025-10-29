@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"database/sql"
-	"net/http"
 
 	"wilin.info/api/database/kalan"
 	"wilin.info/api/database/users"
@@ -12,10 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
-
-func helloWorld(ctx echo.Context) error {
-	return ctx.String(http.StatusOK, "Hello, World!")
-}
 
 const LOGGER_FORMAT = "\033[36m${time_custom}\033[0m | ${remote_ip} | \033[33m${method}\033[0m ${uri} | ${status} | ${latency_human}\n"
 const TIME_FORMAT = "02-Jan-2006 15:04:05"
