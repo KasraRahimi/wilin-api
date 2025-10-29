@@ -3,8 +3,8 @@ package routes
 import (
 	"errors"
 	"net/http"
-	"wilin/src/database"
-	"wilin/src/server/utils"
+	"wilin.com/api/src/database"
+	"wilin.com/api/src/server/utils"
 
 	"github.com/gin-gonic/gin"
 )

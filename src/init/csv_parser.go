@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
-	"wilin/src/database"
+	"wilin.com/api/src/database"
 )
 
 func GetRecordsFromCsv(filename string) ([][]string, error) {

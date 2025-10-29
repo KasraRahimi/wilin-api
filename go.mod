@@ -1,4 +1,4 @@
-module wilin
+module wilin.com/api
 
 go 1.23.6
 

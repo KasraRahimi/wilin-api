@@ -3,8 +3,8 @@ package router
 import (
 	"context"
 	"strings"
-	"wilin/database/kalan"
-	"wilin/database/users"
+	"wilin.com/api/database/kalan"
+	"wilin.com/api/database/users"
 )
 
 type ErrorJson struct {

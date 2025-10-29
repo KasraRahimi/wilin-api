@@ -2,9 +2,9 @@ package server
 
 import (
 	"database/sql"
-	"wilin/src/database"
-	"wilin/src/database/permissions"
-	"wilin/src/server/routes"
+	"wilin.com/api/src/database"
+	"wilin.com/api/src/database/permissions"
+	"wilin.com/api/src/server/routes"
 
 	"github.com/gin-gonic/gin"
 )

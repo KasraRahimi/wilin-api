@@ -2,7 +2,7 @@ package utils_test
 
 import (
 	"testing"
-	"wilin/src/server/utils"
+	"wilin.com/api/src/server/utils"
 )
 
 func TestValidEmails(t *testing.T) {

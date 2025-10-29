@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
-	"wilin/database/kalan"
-	"wilin/database/users"
-	"wilin/server/router"
+	"wilin.com/api/database/kalan"
+	"wilin.com/api/database/users"
+	"wilin.com/api/server/router"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

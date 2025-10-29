@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 	"slices"
-	"wilin/database/kalan"
+	"wilin.com/api/database/kalan"
 
 	"github.com/labstack/echo/v4"
 )
