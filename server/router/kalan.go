@@ -1,6 +1,7 @@
 package router
 
 import (
+	"errors"
 	"net/http"
 	"slices"
 
@@ -10,21 +11,37 @@ import (
 )
 
 type KalanDTO struct {
-	Id    int    `json:"id"`
-	Entry string `json:"entry"`
-	Pos   string `json:"pos"`
-	Gloss string `json:"gloss"`
-	Notes string `json:"notes"`
+	ID    int    `json:"id" form:"id"`
+	Entry string `json:"entry" form:"entry"`
+	Pos   string `json:"pos" form:"pos"`
+	Gloss string `json:"gloss" form:"gloss"`
+	Notes string `json:"notes" form:"notes"`
 }
 
 func NewKalanDTO(id int, entry string, pos string, gloss string, notes string) KalanDTO {
 	return KalanDTO{
-		Id:    id,
+		ID:    id,
 		Entry: entry,
 		Pos:   pos,
 		Gloss: gloss,
 		Notes: notes,
 	}
+}
+
+func validateKalanJson(kalan *KalanDTO) error {
+	if kalan.Entry == "" {
+		return errNoEntry
+	}
+	if kalan.Pos == "" {
+		return errNoPos
+	}
+	if kalan.Gloss == "" {
+		return errNoGloss
+	}
+	if kalan.ID == 0 {
+		return errNoId
+	}
+	return nil
 }
 
 type KalanArrayDTO struct {
@@ -141,4 +158,40 @@ func (r *Router) GetKalanBySearch(ctx echo.Context) error {
 	kalanArrayDTO.PageCount = pageCount
 
 	return ctx.JSON(http.StatusOK, kalanArrayDTO)
+}
+
+func (r *Router) AddKalan(ctx echo.Context) error {
+	var kalanDTO KalanDTO
+	err := ctx.Bind(&kalanDTO)
+	if err != nil {
+		errJSON := NewErrorJson(errInvalidFormat.Error())
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	err = validateKalanJson(&kalanDTO)
+	if err != nil && !errors.Is(err, errNoId) {
+		errJSON := NewErrorJson(err.Error())
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	createParams := kalan.CreateKalanParams{
+		Entry: kalanDTO.Entry,
+		Pos:   kalanDTO.Pos,
+		Gloss: kalanDTO.Gloss,
+		Notes: kalanDTO.Notes,
+	}
+
+	result, err := r.kalanQueries.CreateKalan(r.ctx, createParams)
+	if err != nil {
+		errJSON := NewErrorJson("could not add kalan to database")
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	kalanID, err := result.LastInsertId()
+	if err != nil {
+		ctx.Logger().Errorf("error fetching result id: %v\n", err.Error())
+	}
+
+	kalanDTO.ID = int(kalanID)
+	return ctx.JSON(http.StatusCreated, kalanDTO)
 }

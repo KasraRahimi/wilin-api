@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+
 	"wilin.info/api/database/kalan"
 	"wilin.info/api/database/users"
 	"wilin.info/api/server/router"
@@ -45,6 +46,7 @@ func New(db *sql.DB) *echo.Echo {
 	server.GET("/", router.HelloWorld)
 	server.GET("/kalan", router.GetAllKalan)
 	server.GET("/kalan/paginated", router.GetKalanBySearch)
+	server.POST("/kalan", router.AddKalan)
 
 	return server
 }
