@@ -43,7 +43,6 @@ OFFSET
     ?;
 
 -- name: ReadKalanSearchCount :one
--- name: ReadKalanBySearch :many
 SELECT COUNT(*)
 FROM kalan
 WHERE (
