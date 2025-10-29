@@ -33,6 +33,10 @@ type KalanArrayDTO struct {
 	PageCount  int        `json:"pageCount"`
 }
 
+func (arr *KalanArrayDTO) AddKalan(kalan KalanDTO) {
+	arr.Kalans = append(arr.Kalans, kalan)
+}
+
 type SearchQueryDTO struct {
 	Search string `query:"search"`
 	Fields string `query:"fields"`
@@ -80,7 +84,7 @@ func (r *Router) GetAllKalan(ctx echo.Context) error {
 
 	for _, kalan := range kalans {
 		kalanDTO := NewKalanDTO(int(kalan.ID), kalan.Entry, kalan.Pos, kalan.Gloss, kalan.Notes)
-		kalanArrayDTO.Kalans = append(kalanArrayDTO.Kalans, kalanDTO)
+		kalanArrayDTO.AddKalan(kalanDTO)
 	}
 
 	return ctx.JSON(http.StatusOK, kalanArrayDTO)
@@ -114,10 +118,17 @@ func (r *Router) GetKalanBySearch(ctx echo.Context) error {
 	var kalanArrayDTO KalanArrayDTO
 	for _, kalan := range kalans {
 		kalanDTO := NewKalanDTO(int(kalan.ID), kalan.Entry, kalan.Pos, kalan.Gloss, kalan.Notes)
-		kalanArrayDTO.Kalans = append(kalanArrayDTO.Kalans, kalanDTO)
+		kalanArrayDTO.AddKalan(kalanDTO)
 	}
 
-	kalanCount, err := r.kalanQueries.ReadKalanCount(r.ctx)
+	searchCountParams := kalan.ReadKalanSearchCountParams{
+		Search:  searchParams.Search,
+		Isentry: searchParams.Isentry,
+		Ispos:   searchParams.Ispos,
+		Isgloss: searchParams.Isgloss,
+		Isnotes: searchParams.Isnotes,
+	}
+	kalanCount, err := r.kalanQueries.ReadKalanSearchCount(r.ctx, searchCountParams)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, NewErrorJson("Could not fetch words"))
 	}
