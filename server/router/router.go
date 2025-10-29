@@ -28,6 +28,10 @@ func NewErrorJson(message string) ErrorJson {
 	return ErrorJson{Error: message}
 }
 
+// splitQuery takes a string and returns a slice
+// with the string split by commas (,).
+// If the string is empty, it will return an
+// empty slice
 func splitQuery(query string) []string {
 	if len(query) < 1 {
 		return []string{}

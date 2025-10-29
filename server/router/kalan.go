@@ -92,6 +92,8 @@ func NewFields(fieldsArray []string) Fields {
 	return fields
 }
 
+// Define the Handlers for the kalan related routes
+
 func (r *Router) GetAllKalan(ctx echo.Context) error {
 	var kalanArrayDTO KalanArrayDTO
 
