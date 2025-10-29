@@ -42,5 +42,26 @@ LIMIT ?
 OFFSET
     ?;
 
+-- name: ReadKalanSearchCount :one
+-- name: ReadKalanBySearch :many
+SELECT COUNT(*)
+FROM kalan
+WHERE (
+        sqlc.arg (isEntry) = True
+        AND entry LIKE CONCAT('%', sqlc.arg (search), '%')
+    )
+    OR (
+        sqlc.arg (isPos) = True
+        AND pos LIKE CONCAT('%', sqlc.arg (search), '%')
+    )
+    OR (
+        sqlc.arg (isGloss) = True
+        AND gloss LIKE CONCAT('%', sqlc.arg (search), '%')
+    )
+    OR (
+        sqlc.arg (isNotes) = True
+        AND notes LIKE CONCAT('%', sqlc.arg (search), '%')
+    );
+
 -- name: ReadKalanCount :one
 SELECT COUNT(*) FROM kalan

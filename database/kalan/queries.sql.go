@@ -192,3 +192,48 @@ func (q *Queries) ReadKalanCount(ctx context.Context) (int64, error) {
 	err := row.Scan(&count)
 	return count, err
 }
+
+const readKalanSearchCount = `-- name: ReadKalanSearchCount :one
+SELECT COUNT(*)
+FROM kalan
+WHERE (
+        ? = True
+        AND entry LIKE CONCAT('%', ?, '%')
+    )
+    OR (
+        ? = True
+        AND pos LIKE CONCAT('%', ?, '%')
+    )
+    OR (
+        ? = True
+        AND gloss LIKE CONCAT('%', ?, '%')
+    )
+    OR (
+        ? = True
+        AND notes LIKE CONCAT('%', ?, '%')
+    )
+`
+
+type ReadKalanSearchCountParams struct {
+	Isentry interface{}
+	Search  interface{}
+	Ispos   interface{}
+	Isgloss interface{}
+	Isnotes interface{}
+}
+
+func (q *Queries) ReadKalanSearchCount(ctx context.Context, arg ReadKalanSearchCountParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, readKalanSearchCount,
+		arg.Isentry,
+		arg.Search,
+		arg.Ispos,
+		arg.Search,
+		arg.Isgloss,
+		arg.Search,
+		arg.Isnotes,
+		arg.Search,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
