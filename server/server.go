@@ -40,9 +40,11 @@ func New(db *sql.DB) *echo.Echo {
 	// add routes
 	server.GET("/", router.HelloWorld)
 	server.GET("/kalan", router.GetAllKalan)
-	server.POST("/kalan", router.AddKalan)
 	server.GET("/kalan/paginated", router.GetKalanBySearch)
 	server.GET("/kalan/:id", router.GetKalanByID)
+	server.POST("/kalan", router.AddKalan)
+	server.PUT("/kalan", router.UpdateKalan)
+	server.DELETE("/kalan/:id", router.DeleteKalan)
 
 	return server
 }

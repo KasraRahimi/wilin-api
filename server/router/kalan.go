@@ -3,6 +3,7 @@ package router
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -229,4 +230,76 @@ func (r *Router) AddKalan(ctx echo.Context) error {
 
 	kalanDTO.ID = int(kalanID)
 	return ctx.JSON(http.StatusCreated, kalanDTO)
+}
+
+func (r *Router) UpdateKalan(ctx echo.Context) error {
+	var kalanDTO KalanDTO
+	err := ctx.Bind(&kalanDTO)
+	if err != nil {
+		errJSON := NewErrorJson(errInvalidFormat.Error())
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	err = validateKalanJson(&kalanDTO)
+	if err != nil {
+		errJSON := NewErrorJson(err.Error())
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	updateParams := kalan.UpdateKalanParams{
+		Entry: kalanDTO.Entry,
+		Pos:   kalanDTO.Pos,
+		Gloss: kalanDTO.Gloss,
+		Notes: kalanDTO.Notes,
+		ID:    int32(kalanDTO.ID),
+	}
+
+	result, err := r.kalanQueries.UpdateKalan(r.ctx, updateParams)
+	if err != nil {
+		errJSON := NewErrorJson("could not update kalan")
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		errJSON := NewErrorJson("could not update kalan")
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	if rowsAffected < 1 {
+		errMsg := fmt.Sprintf("no kalan with id=%v", kalanDTO.ID)
+		errJSON := NewErrorJson(errMsg)
+		return ctx.JSON(http.StatusNotFound, errJSON)
+	}
+
+	return ctx.JSON(http.StatusOK, kalanDTO)
+}
+
+func (r *Router) DeleteKalan(ctx echo.Context) error {
+	var kalanIDParam KalanIDParam
+	err := ctx.Bind(&kalanIDParam)
+	if err != nil {
+		errJSON := NewErrorJson(errInvalidFormat.Error())
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	result, err := r.kalanQueries.DeleteKalan(r.ctx, int32(kalanIDParam.ID))
+	if err != nil {
+		errJSON := NewErrorJson("could not delete kalan")
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		errJSON := NewErrorJson("could not delete kalan")
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	if rowsAffected < 1 {
+		errMsg := fmt.Sprintf("no kalan with id=%v", kalanIDParam.ID)
+		errJSON := NewErrorJson(errMsg)
+		return ctx.JSON(http.StatusNotFound, errJSON)
+	}
+
+	return ctx.NoContent(http.StatusNoContent)
 }
