@@ -64,3 +64,16 @@ WHERE (
 
 -- name: ReadKalanCount :one
 SELECT COUNT(*) FROM kalan;
+
+-- name: UpdateKalan :execresult
+UPDATE kalan
+SET
+    entry = ?,
+    pos = ?,
+    gloss = ?,
+    notes = ?
+WHERE
+    id = ?;
+
+-- name: DeleteKalan :execresult
+DELETE FROM kalan WHERE id = ?;

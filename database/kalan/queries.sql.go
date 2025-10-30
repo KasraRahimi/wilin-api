@@ -30,6 +30,14 @@ func (q *Queries) CreateKalan(ctx context.Context, arg CreateKalanParams) (sql.R
 	)
 }
 
+const deleteKalan = `-- name: DeleteKalan :execresult
+DELETE FROM kalan WHERE id = ?
+`
+
+func (q *Queries) DeleteKalan(ctx context.Context, id int32) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deleteKalan, id)
+}
+
 const readKalan = `-- name: ReadKalan :many
 SELECT id, entry, pos, gloss, notes FROM kalan ORDER BY id
 `
@@ -236,4 +244,33 @@ func (q *Queries) ReadKalanSearchCount(ctx context.Context, arg ReadKalanSearchC
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const updateKalan = `-- name: UpdateKalan :execresult
+UPDATE kalan
+SET
+    entry = ?,
+    pos = ?,
+    gloss = ?,
+    notes = ?
+WHERE
+    id = ?
+`
+
+type UpdateKalanParams struct {
+	Entry string
+	Pos   string
+	Gloss string
+	Notes string
+	ID    int32
+}
+
+func (q *Queries) UpdateKalan(ctx context.Context, arg UpdateKalanParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateKalan,
+		arg.Entry,
+		arg.Pos,
+		arg.Gloss,
+		arg.Notes,
+		arg.ID,
+	)
 }
