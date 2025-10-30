@@ -1,6 +1,7 @@
 package router
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"slices"
@@ -53,6 +54,10 @@ type KalanArrayDTO struct {
 
 func (arr *KalanArrayDTO) AddKalan(kalan KalanDTO) {
 	arr.Kalans = append(arr.Kalans, kalan)
+}
+
+type KalanIDParam struct {
+	ID int `param:"id"`
 }
 
 type SearchQueryDTO struct {
@@ -108,6 +113,34 @@ func (r *Router) GetAllKalan(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, kalanArrayDTO)
+}
+
+func (r *Router) GetKalanByID(ctx echo.Context) error {
+	var kalanID KalanIDParam
+	err := ctx.Bind(&kalanID)
+	if err != nil {
+		errJSON := NewErrorJson("invalid id")
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	kalan, err := r.kalanQueries.ReadKalanById(r.ctx, int32(kalanID.ID))
+	if err != nil {
+		var errJSON ErrorJson
+		var statusCode int
+
+		if errors.Is(err, sql.ErrNoRows) {
+			errJSON = NewErrorJson("invalid word, does not exist")
+			statusCode = http.StatusNotFound
+		} else {
+			errJSON = NewErrorJson("could not fetch word")
+			statusCode = http.StatusInternalServerError
+		}
+
+		return ctx.JSON(statusCode, errJSON)
+	}
+
+	kalanDTO := NewKalanDTO(int(kalan.ID), kalan.Entry, kalan.Pos, kalan.Gloss, kalan.Notes)
+	return ctx.JSON(http.StatusAccepted, kalanDTO)
 }
 
 func (r *Router) GetKalanBySearch(ctx echo.Context) error {
