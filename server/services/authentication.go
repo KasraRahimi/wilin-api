@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/mail"
 	"os"
 	"time"
@@ -15,6 +16,8 @@ const BYCRYPT_COST = 13
 
 var SIGNING_ALG = jwt.SigningMethodHS256
 
+var FAKE_PASSWORD string
+
 var (
 	ErrEmptySecret  = errors.New("empty secret")
 	ErrInvalidToken = errors.New("invalid token")
@@ -23,6 +26,18 @@ var (
 type MyJWTClaims struct {
 	Type string `json:"type,omitempty"`
 	jwt.RegisteredClaims
+}
+
+func init() {
+	passwordHash, err := GeneratePasswordHash("contrasena")
+	if err != nil {
+		log.Printf("failed to generate fake password hash: %v\n", err)
+		FAKE_PASSWORD = "$2a$13$GcHjrPzhZzc4ZYOmaN1Kc.ohBOOT4Z9DtESP3aASZd94xl85NCjee"
+		return
+	}
+
+	log.Println("generated fake password hash")
+	FAKE_PASSWORD = passwordHash
 }
 
 func IsValidEmail(email string) bool {
@@ -41,6 +56,10 @@ func GeneratePasswordHash(password string) (string, error) {
 func IsPasswordAndHashSame(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func FakeHashCompare() {
+	_ = IsPasswordAndHashSame("motdepasse", FAKE_PASSWORD)
 }
 
 func GenerateToken(tokenType string, userId string, expireMinutes int) (string, error) {
