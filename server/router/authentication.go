@@ -120,7 +120,7 @@ func (r *Router) ExtractUserID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		authHeader := ctx.Request().Header.Get(echo.HeaderAuthorization)
 		authParts := strings.Split(authHeader, " ")
-		if len(authParts) != 2 || authParts[0] != "bearer" {
+		if len(authParts) != 2 || strings.ToLower(authParts[0]) != "bearer" {
 			return next(ctx)
 		}
 
