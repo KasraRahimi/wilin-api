@@ -116,6 +116,30 @@ func validateSignUpFields(ctx context.Context, userQueries *users.Queries, field
 	return http.StatusOK, nil
 }
 
+func (r *Router) ExtractUserID(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		authHeader := ctx.Request().Header.Get(echo.HeaderAuthorization)
+		authParts := strings.Split(authHeader, " ")
+		if len(authParts) != 2 || authParts[0] != "bearer" {
+			return next(ctx)
+		}
+
+		tokenString := authParts[1]
+		claims, err := services.ParseToken(tokenString)
+		if err != nil {
+			return next(ctx)
+		}
+
+		userID, err := strconv.Atoi(claims.Subject)
+		if err != nil {
+			return next(ctx)
+		}
+
+		ctx.Set("userID", userID)
+		return next(ctx)
+	}
+}
+
 func (r *Router) HandleSignUp(ctx echo.Context) error {
 	signUpFields := new(SignUpFields)
 

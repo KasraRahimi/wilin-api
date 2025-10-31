@@ -37,6 +37,9 @@ func New(db *sql.DB) *echo.Echo {
 	usersQueries := users.New(db)
 	router := router.New(context.Background(), kalanQueries, usersQueries)
 
+	// add preroute middleware
+	server.Use(router.ExtractUserID)
+
 	// add routes
 	server.GET("/", router.HelloWorld)
 
