@@ -31,3 +31,15 @@ FROM users
 WHERE
     email = ?
 LIMIT 1;
+
+-- name: ReadUserByID :one
+SELECT
+    id,
+    email,
+    username,
+    password,
+    role
+FROM users
+WHERE
+    id = ?
+LIMIT 1;

@@ -63,6 +63,32 @@ func (q *Queries) ReadUserByEmail(ctx context.Context, email string) (User, erro
 	return i, err
 }
 
+const readUserByID = `-- name: ReadUserByID :one
+SELECT
+    id,
+    email,
+    username,
+    password,
+    role
+FROM users
+WHERE
+    id = ?
+LIMIT 1
+`
+
+func (q *Queries) ReadUserByID(ctx context.Context, id int32) (User, error) {
+	row := q.db.QueryRowContext(ctx, readUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Password,
+		&i.Role,
+	)
+	return i, err
+}
+
 const readUserByUsername = `-- name: ReadUserByUsername :one
 SELECT
     id,
