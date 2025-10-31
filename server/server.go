@@ -48,6 +48,7 @@ func New(db *sql.DB) *echo.Echo {
 	server.DELETE("/kalan/:id", router.DeleteKalan)
 
 	server.POST("/signup", router.HandleSignUp)
+	server.POST("/login", router.HandleLogin)
 
 	return server
 }

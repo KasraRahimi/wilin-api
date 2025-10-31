@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -30,7 +31,7 @@ type UserDTO struct {
 	ID       int    `json:"id" form:"id"`
 	Email    string `json:"email" form:"email"`
 	Username string `json:"username" form:"username"`
-	Password string `json:"password" form:"password"`
+	Password string `json:"password" form:"password,omitempty"`
 	Role     string `json:"role" form:"role"`
 }
 
@@ -44,8 +45,14 @@ func NewUserDTO(id int, email string, username string, password string, role str
 	}
 }
 
-type RefreshTokenDTO struct {
-	Token string `json:"token"`
+type TokensDTO struct {
+	AuthToken    string `json:"authToken,omitempty"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+}
+
+type LoginReturnDTO struct {
+	User UserDTO `json:"user"`
+	TokensDTO
 }
 
 const (
@@ -56,7 +63,9 @@ const (
 )
 
 const (
-	InvalidForm = "invalid format"
+	InvalidForm  = "invalid format"
+	InvalidLogin = "invalid username or password"
+	ServerError  = "something went wrong"
 
 	InvalidEmail = "invalid email"
 	EmailTaken   = "email taken"
@@ -124,7 +133,7 @@ func (r *Router) HandleSignUp(ctx echo.Context) error {
 
 	passwordHash, err := services.GeneratePasswordHash(signUpFields.Password)
 	if err != nil {
-		errJSON := NewErrorJson("something went wrong")
+		errJSON := NewErrorJson(ServerError)
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
 
@@ -142,7 +151,7 @@ func (r *Router) HandleSignUp(ctx echo.Context) error {
 
 	userID, err := result.LastInsertId()
 	if err != nil {
-		errJSON := NewErrorJson("something went wrong")
+		errJSON := NewErrorJson(ServerError)
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
 
@@ -155,4 +164,63 @@ func (r *Router) HandleSignUp(ctx echo.Context) error {
 	)
 
 	return ctx.JSON(http.StatusCreated, userDTO)
+}
+
+func (r *Router) HandleLogin(ctx echo.Context) error {
+	loginFields := new(LoginFields)
+
+	err := ctx.Bind(loginFields)
+	if err != nil {
+		errJSON := NewErrorJson(InvalidForm)
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	user, err := r.userQueries.ReadUserByUsername(r.ctx, loginFields.Username)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			errJSON := NewErrorJson(ServerError)
+			return ctx.JSON(http.StatusInternalServerError, errJSON)
+		}
+
+		// run a fake hash to simulate invalid password
+		services.FakeHashCompare()
+
+		errJSON := NewErrorJson(InvalidLogin)
+		return ctx.JSON(http.StatusUnauthorized, errJSON)
+	}
+
+	isCorrectPassword := services.IsPasswordAndHashSame(loginFields.Password, user.Password)
+
+	if !isCorrectPassword {
+		errJSON := NewErrorJson(InvalidLogin)
+		return ctx.JSON(http.StatusUnauthorized, errJSON)
+	}
+
+	userID := strconv.Itoa(int(user.ID))
+
+	authToken, err := services.GenerateToken("authToken", userID, TIME_TO_AUTH_EXPIRE_MINUTES)
+	if err != nil {
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	refreshToken, err := services.GenerateToken("refreshToken", userID, TIME_TO_REFRESH_EXPIRE_MINUTES)
+	if err != nil {
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	tokensDTO := TokensDTO{AuthToken: authToken, RefreshToken: refreshToken}
+
+	userDTO := NewUserDTO(
+		int(user.ID),
+		user.Email,
+		user.Username,
+		"",
+		user.Role,
+	)
+
+	loginReturnDTO := LoginReturnDTO{User: userDTO, TokensDTO: tokensDTO}
+
+	return ctx.JSON(http.StatusOK, loginReturnDTO)
 }
