@@ -27,6 +27,14 @@ func extractUserRole(
 	return services.NewRole(user.Role)
 }
 
+func handleUnauthorized(ctx echo.Context, role services.Role) error {
+	if role == services.ROLE_NON_USER {
+		return ctx.NoContent(http.StatusUnauthorized)
+	} else {
+		return ctx.NoContent(http.StatusForbidden)
+	}
+}
+
 func (r *Router) VerifyPermissionsAll(perms ...services.Permission) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
@@ -35,7 +43,7 @@ func (r *Router) VerifyPermissionsAll(perms ...services.Permission) echo.Middlew
 
 			for _, perm := range perms {
 				if !role.Can(perm) {
-					return ctx.NoContent(http.StatusForbidden)
+					return handleUnauthorized(ctx, role)
 				}
 			}
 
@@ -56,7 +64,7 @@ func (r *Router) VerifyPermissionsAny(perms ...services.Permission) echo.Middlew
 				}
 			}
 
-			return ctx.NoContent(http.StatusForbidden)
+			return handleUnauthorized(ctx, role)
 		}
 	}
 }
