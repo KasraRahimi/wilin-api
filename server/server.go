@@ -7,6 +7,7 @@ import (
 	"wilin.info/api/database/kalan"
 	"wilin.info/api/database/users"
 	"wilin.info/api/server/router"
+	"wilin.info/api/server/services"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -43,12 +44,37 @@ func New(db *sql.DB) *echo.Echo {
 	// add routes
 	server.GET("/", router.HelloWorld)
 
-	server.GET("/kalan", router.GetAllKalan)
-	server.GET("/kalan/paginated", router.GetKalanBySearch)
-	server.GET("/kalan/:id", router.GetKalanByID)
-	server.POST("/kalan", router.AddKalan)
-	server.PUT("/kalan", router.UpdateKalan)
-	server.DELETE("/kalan/:id", router.DeleteKalan)
+	server.GET(
+		"/kalan",
+		router.GetAllKalan,
+		router.VerifyPermissionsAll(services.PERMISSION_VIEW_WORD),
+	)
+	server.GET(
+		"/kalan/paginated",
+		router.GetKalanBySearch,
+		router.VerifyPermissionsAll(services.PERMISSION_VIEW_WORD),
+	)
+	server.GET(
+		"/kalan/:id",
+		router.GetKalanByID,
+		router.VerifyPermissionsAll(services.PERMISSION_VIEW_WORD),
+	)
+
+	server.POST(
+		"/kalan",
+		router.AddKalan,
+		router.VerifyPermissionsAll(services.PERMISSION_ADD_WORD),
+	)
+	server.PUT(
+		"/kalan",
+		router.UpdateKalan,
+		router.VerifyPermissionsAll(services.PERMISSION_MODIFY_WORD),
+	)
+	server.DELETE(
+		"/kalan/:id",
+		router.DeleteKalan,
+		router.VerifyPermissionsAll(services.PERMISSION_DELETE_WORD),
+	)
 
 	server.POST("/signup", router.HandleSignUp)
 	server.POST("/login", router.HandleLogin)
