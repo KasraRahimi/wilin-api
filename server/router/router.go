@@ -14,14 +14,14 @@ type ErrorJson struct {
 }
 
 var (
-	errInvalidFormat = errors.New("invalid format")
-	errNoId          = errors.New("no id")
-	errNoEntry       = errors.New("no entry")
-	errNoPos         = errors.New("no pos")
-	errNoGloss       = errors.New("no gloss")
-	errNoUserID      = errors.New("no user id")
+	ErrInvalidFormat = errors.New("invalid format")
+	ErrNoId          = errors.New("no id")
+	ErrNoEntry       = errors.New("no entry")
+	ErrNoPos         = errors.New("no pos")
+	ErrNoGloss       = errors.New("no gloss")
+	ErrNoUserID      = errors.New("no user id")
 
-	errNoUserFromCtx = errors.New("user could not be fetched")
+	ErrNoUserFromCtx = errors.New("user could not be fetched")
 )
 
 func NewErrorJson(message string) ErrorJson {

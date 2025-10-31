@@ -32,16 +32,16 @@ func NewKalanDTO(id int, entry string, pos string, gloss string, notes string) K
 
 func validateKalanJson(kalan *KalanDTO) error {
 	if kalan.Entry == "" {
-		return errNoEntry
+		return ErrNoEntry
 	}
 	if kalan.Pos == "" {
-		return errNoPos
+		return ErrNoPos
 	}
 	if kalan.Gloss == "" {
-		return errNoGloss
+		return ErrNoGloss
 	}
 	if kalan.ID == 0 {
-		return errNoId
+		return ErrNoId
 	}
 	return nil
 }
@@ -200,12 +200,12 @@ func (r *Router) AddKalan(ctx echo.Context) error {
 	var kalanDTO KalanDTO
 	err := ctx.Bind(&kalanDTO)
 	if err != nil {
-		errJSON := NewErrorJson(errInvalidFormat.Error())
+		errJSON := NewErrorJson(ErrInvalidFormat.Error())
 		return ctx.JSON(http.StatusBadRequest, errJSON)
 	}
 
 	err = validateKalanJson(&kalanDTO)
-	if err != nil && !errors.Is(err, errNoId) {
+	if err != nil && !errors.Is(err, ErrNoId) {
 		errJSON := NewErrorJson(err.Error())
 		return ctx.JSON(http.StatusBadRequest, errJSON)
 	}
@@ -236,7 +236,7 @@ func (r *Router) UpdateKalan(ctx echo.Context) error {
 	var kalanDTO KalanDTO
 	err := ctx.Bind(&kalanDTO)
 	if err != nil {
-		errJSON := NewErrorJson(errInvalidFormat.Error())
+		errJSON := NewErrorJson(ErrInvalidFormat.Error())
 		return ctx.JSON(http.StatusBadRequest, errJSON)
 	}
 
@@ -279,7 +279,7 @@ func (r *Router) DeleteKalan(ctx echo.Context) error {
 	var kalanIDParam KalanIDParam
 	err := ctx.Bind(&kalanIDParam)
 	if err != nil {
-		errJSON := NewErrorJson(errInvalidFormat.Error())
+		errJSON := NewErrorJson(ErrInvalidFormat.Error())
 		return ctx.JSON(http.StatusBadRequest, errJSON)
 	}
 
