@@ -3,18 +3,18 @@ package services
 type Role int
 
 const (
-	RoleNonUser Role = iota
-	RoleUser
-	RoleAdmin
+	ROLE_NON_USER Role = iota
+	ROLE_USER
+	ROLE_ADMIN
 )
 
 func (r Role) String() string {
 	switch r {
-	case RoleNonUser:
+	case ROLE_NON_USER:
 		return ""
-	case RoleUser:
+	case ROLE_USER:
 		return "user"
-	case RoleAdmin:
+	case ROLE_ADMIN:
 		return "admin"
 	default:
 		return ""

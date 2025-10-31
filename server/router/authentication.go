@@ -132,7 +132,7 @@ func (r *Router) HandleSignUp(ctx echo.Context) error {
 		Email:    signUpFields.Email,
 		Username: signUpFields.Username,
 		Password: passwordHash,
-		Role:     services.RoleUser.String(),
+		Role:     services.ROLE_USER.String(),
 	}
 	result, err := r.userQueries.CreateUser(r.ctx, params)
 	if err != nil {
@@ -151,7 +151,7 @@ func (r *Router) HandleSignUp(ctx echo.Context) error {
 		signUpFields.Email,
 		signUpFields.Username,
 		"",
-		services.RoleUser.String(),
+		services.ROLE_USER.String(),
 	)
 
 	return ctx.JSON(http.StatusCreated, userDTO)
