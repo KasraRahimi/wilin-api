@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"wilin.info/api/database/kalan"
+	"wilin.info/api/database/proposal"
 	"wilin.info/api/database/users"
 	"wilin.info/api/server/router"
 	"wilin.info/api/server/services"
@@ -36,7 +37,8 @@ func New(db *sql.DB) *echo.Echo {
 	// initialize router
 	kalanQueries := kalan.New(db)
 	usersQueries := users.New(db)
-	router := router.New(context.Background(), kalanQueries, usersQueries)
+	proposalQueries := proposal.New(db)
+	router := router.New(context.Background(), kalanQueries, usersQueries, proposalQueries)
 
 	// add preroute middleware
 	server.Use(router.ExtractUserID)
@@ -74,6 +76,12 @@ func New(db *sql.DB) *echo.Echo {
 		"/kalan/:id",
 		router.DeleteKalan,
 		router.VerifyPermissionsAll(services.PERMISSION_DELETE_WORD),
+	)
+
+	server.GET(
+		"/proposal",
+		router.GetAllProposals,
+		router.VerifyPermissionsAll(services.PERMISSION_VIEW_ALL_PROPOSAL),
 	)
 
 	server.POST("/signup", router.HandleSignUp)

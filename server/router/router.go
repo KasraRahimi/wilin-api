@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"wilin.info/api/database/kalan"
+	"wilin.info/api/database/proposal"
 	"wilin.info/api/database/users"
 )
 
@@ -45,19 +46,22 @@ func splitQuery(query string) []string {
 }
 
 type Router struct {
-	ctx          context.Context
-	kalanQueries *kalan.Queries
-	userQueries  *users.Queries
+	ctx             context.Context
+	kalanQueries    *kalan.Queries
+	userQueries     *users.Queries
+	proposalQueries *proposal.Queries
 }
 
 func New(
 	ctx context.Context,
 	kalanQueries *kalan.Queries,
 	userQueries *users.Queries,
+	proposalQueries *proposal.Queries,
 ) *Router {
 	return &Router{
-		ctx:          ctx,
-		kalanQueries: kalanQueries,
-		userQueries:  userQueries,
+		ctx:             ctx,
+		kalanQueries:    kalanQueries,
+		userQueries:     userQueries,
+		proposalQueries: proposalQueries,
 	}
 }
