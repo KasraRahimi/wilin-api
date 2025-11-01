@@ -25,6 +25,24 @@ func (r Role) Can(p Permission) bool {
 	return p.IsPermissionInArray(permissionsMap[r])
 }
 
+func (r Role) CanAny(perms ...Permission) bool {
+	for _, perm := range perms {
+		if r.Can(perm) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r Role) CanAll(perms ...Permission) bool {
+	for _, perm := range perms {
+		if !r.Can(perm) {
+			return false
+		}
+	}
+	return true
+}
+
 func NewRole(role string) Role {
 	switch role {
 	case ROLE_NON_USER.String():

@@ -41,10 +41,8 @@ func (r *Router) VerifyPermissionsAll(perms ...services.Permission) echo.Middlew
 			userIDInterface := ctx.Get("userID")
 			role := extractUserRole(r.ctx, r.userQueries, userIDInterface)
 
-			for _, perm := range perms {
-				if !role.Can(perm) {
-					return handleUnauthorized(ctx, role)
-				}
+			if role.CanAll(perms...) {
+				return next(ctx)
 			}
 
 			return next(ctx)
@@ -58,10 +56,8 @@ func (r *Router) VerifyPermissionsAny(perms ...services.Permission) echo.Middlew
 			userIDInterface := ctx.Get("userID")
 			role := extractUserRole(r.ctx, r.userQueries, userIDInterface)
 
-			for _, perm := range perms {
-				if role.Can(perm) {
-					return next(ctx)
-				}
+			if role.CanAny(perms...) {
+				return next(ctx)
 			}
 
 			return handleUnauthorized(ctx, role)
