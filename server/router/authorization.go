@@ -59,7 +59,7 @@ func (r *Router) VerifyPermissionsAny(perms ...services.Permission) echo.Middlew
 			role := extractUserRole(r.ctx, r.userQueries, userIDInterface)
 
 			for _, perm := range perms {
-				if !role.Can(perm) {
+				if role.Can(perm) {
 					return next(ctx)
 				}
 			}
