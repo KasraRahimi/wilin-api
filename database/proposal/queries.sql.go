@@ -40,6 +40,14 @@ func (q *Queries) CreateProposal(ctx context.Context, arg CreateProposalParams) 
 	)
 }
 
+const delete = `-- name: Delete :execresult
+DELETE FROM proposals WHERE id = ?
+`
+
+func (q *Queries) Delete(ctx context.Context, id int32) (sql.Result, error) {
+	return q.db.ExecContext(ctx, delete, id)
+}
+
 const readAllProposalsWithUsername = `-- name: ReadAllProposalsWithUsername :many
 SELECT p.id, p.user_id, u.username, p.entry, p.pos, p.gloss, p.notes
 FROM proposals p
@@ -168,4 +176,36 @@ func (q *Queries) ReadProposalsByUserIDWithUsername(ctx context.Context, id int3
 		return nil, err
 	}
 	return items, nil
+}
+
+const update = `-- name: Update :execresult
+UPDATE proposals
+SET
+    user_id = ?,
+    entry = ?,
+    pos = ?,
+    gloss = ?,
+    notes = ?
+WHERE
+    id = ?
+`
+
+type UpdateParams struct {
+	UserID sql.NullInt32
+	Entry  string
+	Pos    string
+	Gloss  string
+	Notes  string
+	ID     int32
+}
+
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, update,
+		arg.UserID,
+		arg.Entry,
+		arg.Pos,
+		arg.Gloss,
+		arg.Notes,
+		arg.ID,
+	)
 }

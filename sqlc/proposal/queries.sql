@@ -28,3 +28,17 @@ FROM proposals p
 WHERE
     p.id = ?
 LIMIT 1;
+
+-- name: Update :execresult
+UPDATE proposals
+SET
+    user_id = ?,
+    entry = ?,
+    pos = ?,
+    gloss = ?,
+    notes = ?
+WHERE
+    id = ?;
+
+-- name: Delete :execresult
+DELETE FROM proposals WHERE id = ?;
