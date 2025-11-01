@@ -104,6 +104,11 @@ func New(db *sql.DB) *echo.Echo {
 		router.UpdateProposal,
 		router.VerifyPermissionsAny(services.PERMISSION_MODIFY_SELF_PROPOSAL, services.PERMISSION_MODIFY_ALL_PROPOSAL),
 	)
+	server.DELETE(
+		"/proposal/:id",
+		router.DeleteProposal,
+		router.VerifyPermissionsAny(services.PERMISSION_DELETE_SELF_PROPOSAL, services.PERMISSION_DELETE_ALL_PROPOSAL),
+	)
 	server.GET(
 		"/proposal/me",
 		router.GetMyProposals,

@@ -260,3 +260,52 @@ func (r *Router) UpdateProposal(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, proposalDTO)
 }
+
+func (r *Router) DeleteProposal(ctx echo.Context) error {
+	params := ProposalIDDTO{}
+	err := ctx.Bind(&params)
+	if err != nil {
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	userID, ok := ctx.Get("userID").(int)
+	if !ok {
+		return ctx.NoContent(http.StatusUnauthorized)
+	}
+
+	user, err := r.userQueries.ReadUserByID(r.ctx, int32(userID))
+	if err != nil {
+		ctx.Logger().Errorf("could not fetch user: %v", err.Error())
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	proposal, err := r.proposalQueries.ReadProposalByIDWithUsername(r.ctx, int32(params.ID))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			msg := fmt.Sprintf("no proposal with id=%v", params.ID)
+			errJSON := NewErrorJson(msg)
+			return ctx.JSON(http.StatusNotFound, errJSON)
+		}
+		ctx.Logger().Errorf("could not fetch proposal: %v", err.Error())
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	userRole := services.NewRole(user.Role)
+	isUserOwner := userRole.Can(services.PERMISSION_DELETE_SELF_PROPOSAL) && user.ID == proposal.UserID.Int32
+	isUserAdmin := userRole.Can(services.PERMISSION_DELETE_ALL_PROPOSAL)
+
+	if !isUserOwner && !isUserAdmin {
+		return ctx.NoContent(http.StatusForbidden)
+	}
+
+	_, err = r.proposalQueries.Delete(r.ctx, int32(params.ID))
+	if err != nil {
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	return ctx.NoContent(http.StatusNoContent)
+}
