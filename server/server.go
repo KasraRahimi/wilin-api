@@ -12,10 +12,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 const LOGGER_FORMAT = "\033[36m${time_custom}\033[0m | ${remote_ip} | \033[33m${method}\033[0m ${uri} | ${status} | ${latency_human}\n"
 const TIME_FORMAT = "02-Jan-2006 15:04:05"
+
+const MANUAL_LOGGER_FORMAT = "[${level}] | ${short_file}:${line} |${message}"
 
 func newLoggerConfig(format string, timeFormat string) middleware.LoggerConfig {
 	return middleware.LoggerConfig{
@@ -27,6 +30,9 @@ func newLoggerConfig(format string, timeFormat string) middleware.LoggerConfig {
 func New(db *sql.DB) *echo.Echo {
 	// initialize echo server
 	server := echo.New()
+	server.Logger.SetHeader(MANUAL_LOGGER_FORMAT)
+	server.Logger.SetLevel(log.INFO)
+
 	server.Use(
 		middleware.LoggerWithConfig(
 			newLoggerConfig(LOGGER_FORMAT, TIME_FORMAT),
