@@ -99,6 +99,11 @@ func New(db *sql.DB) *echo.Echo {
 		router.PostProposal,
 		router.VerifyPermissionsAll(services.PERMISSION_ADD_PROPOSAL),
 	)
+	server.PUT(
+		"/proposal",
+		router.UpdateProposal,
+		router.VerifyPermissionsAny(services.PERMISSION_MODIFY_SELF_PROPOSAL, services.PERMISSION_MODIFY_ALL_PROPOSAL),
+	)
 	server.GET(
 		"/proposal/me",
 		router.GetMyProposals,

@@ -198,3 +198,65 @@ func (r *Router) GetProposalByID(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, proposalDTO)
 }
+
+func (r *Router) UpdateProposal(ctx echo.Context) error {
+	proposalDTO := ProposalDTO{}
+	err := ctx.Bind(&proposalDTO)
+	if err != nil {
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	userID, ok := ctx.Get("userID").(int)
+	if !ok {
+		return ctx.NoContent(http.StatusUnauthorized)
+	}
+
+	user, err := r.userQueries.ReadUserByID(r.ctx, int32(userID))
+	if err != nil {
+		ctx.Logger().Errorf("could not fetch user: %v", err.Error())
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	prop, err := r.proposalQueries.ReadProposalByIDWithUsername(r.ctx, int32(proposalDTO.Id))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			msg := fmt.Sprintf("no proposal with id=%v", proposalDTO.Id)
+			errJSON := NewErrorJson(msg)
+			return ctx.JSON(http.StatusNotFound, errJSON)
+		}
+		ctx.Logger().Errorf("could not fetch proposal: %v", err.Error())
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	userRole := services.NewRole(user.Role)
+	isUserOwner := userRole.Can(services.PERMISSION_MODIFY_SELF_PROPOSAL) && user.ID == prop.UserID.Int32
+	isUserAdmin := userRole.Can(services.PERMISSION_MODIFY_ALL_PROPOSAL)
+
+	if !isUserOwner && !isUserAdmin {
+		return ctx.NoContent(http.StatusForbidden)
+	}
+
+	updateParams := proposal.UpdateParams{
+		UserID: sql.NullInt32{Int32: prop.UserID.Int32, Valid: true},
+		Entry:  proposalDTO.Entry,
+		Pos:    proposalDTO.Pos,
+		Gloss:  proposalDTO.Gloss,
+		Notes:  proposalDTO.Notes,
+		ID:     int32(proposalDTO.Id),
+	}
+
+	_, err = r.proposalQueries.Update(r.ctx, updateParams)
+	if err != nil {
+		ctx.Logger().Errorf("could not update proposal: %v", err.Error())
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	proposalDTO.UserId = int(prop.UserID.Int32)
+	proposalDTO.Username = prop.Username
+
+	return ctx.JSON(http.StatusOK, proposalDTO)
+}
