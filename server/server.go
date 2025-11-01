@@ -89,6 +89,21 @@ func New(db *sql.DB) *echo.Echo {
 		router.GetAllProposals,
 		router.VerifyPermissionsAll(services.PERMISSION_VIEW_ALL_PROPOSAL),
 	)
+	server.GET(
+		"/proposal/:id",
+		router.GetProposalByID,
+		router.VerifyPermissionsAny(services.PERMISSION_VIEW_SELF_PROPOSAL, services.PERMISSION_VIEW_ALL_PROPOSAL),
+	)
+	server.POST(
+		"/proposal",
+		router.PostProposal,
+		router.VerifyPermissionsAll(services.PERMISSION_ADD_PROPOSAL),
+	)
+	server.GET(
+		"/proposal/me",
+		router.GetMyProposals,
+		router.VerifyPermissionsAll(services.PERMISSION_VIEW_SELF_PROPOSAL),
+	)
 
 	server.POST("/signup", router.HandleSignUp)
 	server.POST("/login", router.HandleLogin)
