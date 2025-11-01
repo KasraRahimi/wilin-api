@@ -16,3 +16,13 @@ sql:
       go:
         package: "users"
         out: "database/users"
+  - engine: "mysql"
+    name: "proposal"
+    queries: "sqlc/proposal/queries.sql"
+    schema: 
+      - "sqlc/proposal/schema.sql"
+      - "sqlc/users/schema.sql"
+    gen:
+      go:
+        package: "proposal"
+        out: "database/proposal"
