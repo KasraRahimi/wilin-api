@@ -285,25 +285,16 @@ func (r *Router) HandleRefresh(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusUnauthorized)
 	}
 
-	userID, err := strconv.Atoi(claims.Subject)
-	if err != nil {
-		errJSON := NewErrorJson("invalid token")
-		return ctx.JSON(http.StatusBadRequest, errJSON)
-	}
+	userID := claims.Subject
 
-	user, err := r.userQueries.ReadUserByID(r.ctx, int32(userID))
+	token, err := services.GenerateToken("authToken", userID, TIME_TO_AUTH_EXPIRE_MINUTES)
+
 	if err != nil {
 		errJSON := NewErrorJson(ServerError)
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
 
-	userDTO := NewUserDTO(
-		int(user.ID),
-		user.Email,
-		user.Username,
-		"",
-		user.Role,
-	)
+	tokensDTO := TokensDTO{AuthToken: token}
 
-	return ctx.JSON(http.StatusOK, userDTO)
+	return ctx.JSON(http.StatusOK, tokensDTO)
 }
