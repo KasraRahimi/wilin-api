@@ -31,7 +31,7 @@ type UserDTO struct {
 	ID       int    `json:"id" form:"id"`
 	Email    string `json:"email" form:"email"`
 	Username string `json:"username" form:"username"`
-	Password string `json:"password" form:"password,omitempty"`
+	Password string `json:"password,omitempty" form:"password"`
 	Role     string `json:"role" form:"role"`
 }
 
@@ -247,4 +247,63 @@ func (r *Router) HandleLogin(ctx echo.Context) error {
 	loginReturnDTO := LoginReturnDTO{User: userDTO, TokensDTO: tokensDTO}
 
 	return ctx.JSON(http.StatusOK, loginReturnDTO)
+}
+
+func (r *Router) GetMe(ctx echo.Context) error {
+	userID, ok := ctx.Get("userID").(int)
+	if !ok {
+		return ctx.NoContent(http.StatusUnauthorized)
+	}
+
+	user, err := r.userQueries.ReadUserByID(r.ctx, int32(userID))
+	if err != nil {
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	userDTO := NewUserDTO(
+		int(user.ID),
+		user.Email,
+		user.Username,
+		"",
+		user.Role,
+	)
+
+	return ctx.JSON(http.StatusOK, userDTO)
+}
+
+func (r *Router) HandleRefresh(ctx echo.Context) error {
+	tokens := new(TokensDTO)
+	err := ctx.Bind(tokens)
+	if err != nil {
+		errJSON := NewErrorJson(InvalidForm)
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	claims, err := services.ParseToken(tokens.RefreshToken)
+	if err != nil {
+		return ctx.NoContent(http.StatusUnauthorized)
+	}
+
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		errJSON := NewErrorJson("invalid token")
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	user, err := r.userQueries.ReadUserByID(r.ctx, int32(userID))
+	if err != nil {
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	userDTO := NewUserDTO(
+		int(user.ID),
+		user.Email,
+		user.Username,
+		"",
+		user.Role,
+	)
+
+	return ctx.JSON(http.StatusOK, userDTO)
 }

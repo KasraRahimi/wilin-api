@@ -78,6 +78,8 @@ func New(db *sql.DB) *echo.Echo {
 
 	server.POST("/signup", router.HandleSignUp)
 	server.POST("/login", router.HandleLogin)
+	server.GET("/me", router.GetMe)
+	server.POST("/refresh", router.HandleRefresh)
 
 	return server
 }
