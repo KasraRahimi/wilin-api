@@ -45,7 +45,7 @@ func (r *Router) VerifyPermissionsAll(perms ...services.Permission) echo.Middlew
 				return next(ctx)
 			}
 
-			return next(ctx)
+			return handleUnauthorized(ctx, role)
 		}
 	}
 }
