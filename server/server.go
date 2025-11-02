@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"database/sql"
+	"net/http"
 
 	"wilin.info/api/database/kalan"
 	"wilin.info/api/database/proposal"
@@ -47,6 +48,27 @@ func New(db *sql.DB) *echo.Echo {
 	router := router.New(context.Background(), kalanQueries, usersQueries, proposalQueries)
 
 	// add preroute middleware
+	services.SetOrigins()
+	corsConfig := middleware.CORSConfig{
+		AllowOrigins: services.GetOrigins(),
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+			echo.HeaderCacheControl,
+			echo.HeaderXRequestedWith,
+		},
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+		AllowCredentials: true,
+	}
+	server.Use(middleware.CORSWithConfig(corsConfig))
 	server.Use(router.ExtractUserID)
 
 	// add routes
