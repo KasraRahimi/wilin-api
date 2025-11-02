@@ -141,7 +141,7 @@ func (r *Router) GetKalanByID(ctx echo.Context) error {
 	}
 
 	kalanDTO := NewKalanDTO(int(kalan.ID), kalan.Entry, kalan.Pos, kalan.Gloss, kalan.Notes)
-	return ctx.JSON(http.StatusAccepted, kalanDTO)
+	return ctx.JSON(http.StatusOK, kalanDTO)
 }
 
 func (r *Router) GetKalanBySearch(ctx echo.Context) error {
@@ -153,6 +153,12 @@ func (r *Router) GetKalanBySearch(ctx echo.Context) error {
 
 	fields := NewFields(splitQuery(searchQueryDTO.Fields))
 
+	// pages start at 1
+	page := searchQueryDTO.Page - 1
+	if page < 0 {
+		page = 0
+	}
+
 	searchParams := kalan.ReadKalanBySearchParams{
 		Search:  searchQueryDTO.Search,
 		Isentry: fields.IsEntry,
@@ -161,7 +167,7 @@ func (r *Router) GetKalanBySearch(ctx echo.Context) error {
 		Isnotes: fields.IsNotes,
 		Sort:    searchQueryDTO.Sort,
 		Limit:   PAGE_SIZE,
-		Offset:  int32(PAGE_SIZE * searchQueryDTO.Page),
+		Offset:  int32(PAGE_SIZE * page),
 	}
 
 	kalans, err := r.kalanQueries.ReadKalanBySearch(r.ctx, searchParams)
