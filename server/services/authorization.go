@@ -1,5 +1,7 @@
 package services
 
+import "slices"
+
 type Role int
 
 const (
@@ -8,21 +10,18 @@ const (
 	ROLE_ADMIN
 )
 
+var roleStrings = map[Role]string{
+	ROLE_NON_USER: "",
+	ROLE_USER:     "user",
+	ROLE_ADMIN:    "admin",
+}
+
 func (r Role) String() string {
-	switch r {
-	case ROLE_NON_USER:
-		return ""
-	case ROLE_USER:
-		return "user"
-	case ROLE_ADMIN:
-		return "admin"
-	default:
-		return ""
-	}
+	return roleStrings[r]
 }
 
 func (r Role) Can(p Permission) bool {
-	return p.IsPermissionInArray(permissionsMap[r])
+	return slices.Contains(permissionsMap[r], p)
 }
 
 func (r Role) CanAny(perms ...Permission) bool {
@@ -96,13 +95,4 @@ var permissionsMap = map[Role][]Permission{
 	ROLE_NON_USER: {
 		PERMISSION_VIEW_WORD,
 	},
-}
-
-func (p Permission) IsPermissionInArray(permissionArray []Permission) bool {
-	for _, permissionValue := range permissionArray {
-		if p == permissionValue {
-			return true
-		}
-	}
-	return false
 }
