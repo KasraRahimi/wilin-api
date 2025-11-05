@@ -23,10 +23,10 @@ var RoleStringValues = []RoleStringValue{
 }
 
 func TestRoleString(t *testing.T) {
-	for _, testValue := range RoleStringValues {
-		roleString := testValue.role.String()
-		if strings.Compare(roleString, testValue.expected) != 0 {
-			failTest(t, roleString, testValue.expected)
+	for _, test := range RoleStringValues {
+		roleString := test.role.String()
+		if strings.Compare(roleString, test.expected) != 0 {
+			failTest(t, roleString, test.expected)
 		}
 	}
 }
@@ -53,10 +53,10 @@ var RoleCanValues = []RoleCanValue{
 }
 
 func TestRoleCan(t *testing.T) {
-	for _, testValue := range RoleCanValues {
-		output := testValue.role.Can(testValue.permission)
-		if output != testValue.expected {
-			failTest(t, output, testValue.expected)
+	for _, test := range RoleCanValues {
+		output := test.role.Can(test.permission)
+		if output != test.expected {
+			failTest(t, output, test.expected)
 		}
 	}
 }
