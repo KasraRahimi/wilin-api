@@ -2,6 +2,14 @@ package services
 
 import "slices"
 
+func reverseMap[K comparable, V comparable](m map[K]V) map[V]K {
+	reversedMap := make(map[V]K)
+	for k, v := range m {
+		reversedMap[v] = k
+	}
+	return reversedMap
+}
+
 type Role int
 
 const (
@@ -10,14 +18,16 @@ const (
 	ROLE_ADMIN
 )
 
-var roleStrings = map[Role]string{
+var roleToStrings = map[Role]string{
 	ROLE_NON_USER: "",
 	ROLE_USER:     "user",
 	ROLE_ADMIN:    "admin",
 }
 
+var stringToRoles = reverseMap(roleToStrings)
+
 func (r Role) String() string {
-	return roleStrings[r]
+	return roleToStrings[r]
 }
 
 func (r Role) Can(p Permission) bool {
@@ -42,17 +52,12 @@ func (r Role) CanAll(perms ...Permission) bool {
 	return true
 }
 
-func NewRole(role string) Role {
-	switch role {
-	case ROLE_NON_USER.String():
-		return ROLE_NON_USER
-	case ROLE_USER.String():
-		return ROLE_USER
-	case ROLE_ADMIN.String():
-		return ROLE_ADMIN
-	default:
+func NewRole(roleString string) Role {
+	role, ok := stringToRoles[roleString]
+	if !ok {
 		return ROLE_NON_USER
 	}
+	return role
 }
 
 type Permission int
