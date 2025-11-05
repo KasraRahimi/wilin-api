@@ -5,15 +5,22 @@ import (
 	"strings"
 )
 
-var corsOrigins []string = []string{}
+var DEFAULT_ORIGINS = []string{"https://www.wilin.info", "https://wilin.info"}
+var corsOrigins = DEFAULT_ORIGINS
 
 func SetOrigins() {
 	originsStrings := os.Getenv("ORIGINS")
 	if originsStrings == "" {
-		corsOrigins = []string{"https://www.wilin.info", "https://wilin.info"}
+		corsOrigins = DEFAULT_ORIGINS
 		return
 	}
-	corsOrigins = strings.Split(originsStrings, ",")
+
+	parts := strings.Split(originsStrings, ",")
+	for i, part := range parts {
+		parts[i] = strings.TrimSpace(part)
+	}
+
+	corsOrigins = parts
 }
 
 func GetOrigins() []string {
