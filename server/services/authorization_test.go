@@ -60,3 +60,30 @@ func TestRoleCan(t *testing.T) {
 		}
 	}
 }
+
+type RoleNewValue struct {
+	input    string
+	expected services.Role
+}
+
+var RoleNewValues = []RoleNewValue{
+	{"admin", services.ROLE_ADMIN},
+	{"Admin", services.ROLE_NON_USER},
+	{"ADMIN", services.ROLE_NON_USER},
+	{"aDmIn", services.ROLE_NON_USER},
+	{"user", services.ROLE_USER},
+	{"User", services.ROLE_NON_USER},
+	{"USER", services.ROLE_NON_USER},
+	{"nada", services.ROLE_NON_USER},
+	{"non user", services.ROLE_NON_USER},
+	{"guest", services.ROLE_NON_USER},
+}
+
+func TestRoleNew(t *testing.T) {
+	for _, test := range RoleNewValues {
+		role := services.NewRole(test.input)
+		if role != test.expected {
+			failTest(t, role, test.expected)
+		}
+	}
+}
