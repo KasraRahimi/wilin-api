@@ -13,15 +13,15 @@ func reverseMap[K comparable, V comparable](m map[K]V) map[V]K {
 type Role int
 
 const (
-	ROLE_NON_USER Role = iota
+	ROLE_GUEST Role = iota
 	ROLE_USER
 	ROLE_ADMIN
 )
 
 var roleToStrings = map[Role]string{
-	ROLE_NON_USER: "",
-	ROLE_USER:     "user",
-	ROLE_ADMIN:    "admin",
+	ROLE_GUEST: "",
+	ROLE_USER:  "user",
+	ROLE_ADMIN: "admin",
 }
 
 var stringToRoles = reverseMap(roleToStrings)
@@ -55,7 +55,7 @@ func (r Role) CanAll(perms ...Permission) bool {
 func NewRole(roleString string) Role {
 	role, ok := stringToRoles[roleString]
 	if !ok {
-		return ROLE_NON_USER
+		return ROLE_GUEST
 	}
 	return role
 }
@@ -97,7 +97,7 @@ var permissionsMap = map[Role][]Permission{
 		PERMISSION_MODIFY_SELF_PROPOSAL,
 		PERMISSION_DELETE_SELF_PROPOSAL,
 	},
-	ROLE_NON_USER: {
+	ROLE_GUEST: {
 		PERMISSION_VIEW_WORD,
 	},
 }

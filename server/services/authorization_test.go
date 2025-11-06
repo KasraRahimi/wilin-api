@@ -17,7 +17,7 @@ type RoleStringValue struct {
 }
 
 var RoleStringValues = []RoleStringValue{
-	{services.ROLE_NON_USER, ""},
+	{services.ROLE_GUEST, ""},
 	{services.ROLE_USER, "user"},
 	{services.ROLE_ADMIN, "admin"},
 }
@@ -38,10 +38,10 @@ type RoleCanValue struct {
 }
 
 var RoleCanValues = []RoleCanValue{
-	{services.ROLE_NON_USER, services.PERMISSION_VIEW_WORD, true},
-	{services.ROLE_NON_USER, services.PERMISSION_MODIFY_WORD, false},
-	{services.ROLE_NON_USER, services.PERMISSION_DELETE_WORD, false},
-	{services.ROLE_NON_USER, services.PERMISSION_VIEW_ALL_PROPOSAL, false},
+	{services.ROLE_GUEST, services.PERMISSION_VIEW_WORD, true},
+	{services.ROLE_GUEST, services.PERMISSION_MODIFY_WORD, false},
+	{services.ROLE_GUEST, services.PERMISSION_DELETE_WORD, false},
+	{services.ROLE_GUEST, services.PERMISSION_VIEW_ALL_PROPOSAL, false},
 	{services.ROLE_USER, services.PERMISSION_VIEW_SELF_PROPOSAL, true},
 	{services.ROLE_USER, services.PERMISSION_VIEW_ALL_PROPOSAL, false},
 	{services.ROLE_USER, services.PERMISSION_DELETE_WORD, false},
@@ -68,15 +68,15 @@ type RoleNewValue struct {
 
 var RoleNewValues = []RoleNewValue{
 	{"admin", services.ROLE_ADMIN},
-	{"Admin", services.ROLE_NON_USER},
-	{"ADMIN", services.ROLE_NON_USER},
-	{"aDmIn", services.ROLE_NON_USER},
+	{"Admin", services.ROLE_GUEST},
+	{"ADMIN", services.ROLE_GUEST},
+	{"aDmIn", services.ROLE_GUEST},
 	{"user", services.ROLE_USER},
-	{"User", services.ROLE_NON_USER},
-	{"USER", services.ROLE_NON_USER},
-	{"nada", services.ROLE_NON_USER},
-	{"non user", services.ROLE_NON_USER},
-	{"guest", services.ROLE_NON_USER},
+	{"User", services.ROLE_GUEST},
+	{"USER", services.ROLE_GUEST},
+	{"nada", services.ROLE_GUEST},
+	{"non user", services.ROLE_GUEST},
+	{"guest", services.ROLE_GUEST},
 }
 
 func TestRoleNew(t *testing.T) {
@@ -96,7 +96,7 @@ type RoleCanArrValue struct {
 
 var roleCanAnyValues = []RoleCanArrValue{
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_VIEW_WORD,
 			services.PERMISSION_MODIFY_WORD,
@@ -104,7 +104,7 @@ var roleCanAnyValues = []RoleCanArrValue{
 		true,
 	},
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_DELETE_WORD,
 			services.PERMISSION_MODIFY_WORD,
@@ -112,7 +112,7 @@ var roleCanAnyValues = []RoleCanArrValue{
 		false,
 	},
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_ADD_PROPOSAL,
 			services.PERMISSION_VIEW_SELF_PROPOSAL,
@@ -121,7 +121,7 @@ var roleCanAnyValues = []RoleCanArrValue{
 		false,
 	},
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_VIEW_WORD,
 			services.PERMISSION_DELETE_WORD,
@@ -229,14 +229,14 @@ func TestRoleCanAny(t *testing.T) {
 
 var roleCanAllValues = []RoleCanArrValue{
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_VIEW_WORD,
 		},
 		true,
 	},
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_VIEW_WORD,
 			services.PERMISSION_MODIFY_WORD,
@@ -244,7 +244,7 @@ var roleCanAllValues = []RoleCanArrValue{
 		false,
 	},
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_DELETE_WORD,
 			services.PERMISSION_MODIFY_WORD,
@@ -252,7 +252,7 @@ var roleCanAllValues = []RoleCanArrValue{
 		false,
 	},
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_ADD_PROPOSAL,
 			services.PERMISSION_VIEW_SELF_PROPOSAL,
@@ -261,7 +261,7 @@ var roleCanAllValues = []RoleCanArrValue{
 		false,
 	},
 	{
-		services.ROLE_NON_USER,
+		services.ROLE_GUEST,
 		[]services.Permission{
 			services.PERMISSION_VIEW_WORD,
 			services.PERMISSION_DELETE_WORD,

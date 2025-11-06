@@ -16,19 +16,19 @@ func extractUserRole(
 ) services.Role {
 	userID, ok := userIDInterface.(int)
 	if !ok {
-		return services.ROLE_NON_USER
+		return services.ROLE_GUEST
 	}
 
 	user, err := userQueries.ReadUserByID(ctx, int32(userID))
 	if err != nil {
-		return services.ROLE_NON_USER
+		return services.ROLE_GUEST
 	}
 
 	return services.NewRole(user.Role)
 }
 
 func handleUnauthorized(ctx echo.Context, role services.Role) error {
-	if role == services.ROLE_NON_USER {
+	if role == services.ROLE_GUEST {
 		return ctx.NoContent(http.StatusUnauthorized)
 	} else {
 		return ctx.NoContent(http.StatusForbidden)
