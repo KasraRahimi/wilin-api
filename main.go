@@ -17,7 +17,7 @@ func getDataSource() string {
 	password := os.Getenv("DB_PASSWORD")
 	address := os.Getenv("DB_ADDRESS")
 	dbName := os.Getenv("DB_NAME")
-	return fmt.Sprintf("%s:%s@(%s)/%s?clientFoundRows=true", username, password, address, dbName)
+	return fmt.Sprintf("%s:%s@(%s)/%s?clientFoundRows=true&parseTime=true", username, password, address, dbName)
 }
 
 func main() {
