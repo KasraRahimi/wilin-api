@@ -43,3 +43,6 @@ FROM users
 WHERE
     id = ?
 LIMIT 1;
+
+-- name: UpdatePassword :execresult
+UPDATE users SET password = ? WHERE id = ?;

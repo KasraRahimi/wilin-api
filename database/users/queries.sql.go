@@ -114,3 +114,16 @@ func (q *Queries) ReadUserByUsername(ctx context.Context, username string) (User
 	)
 	return i, err
 }
+
+const updatePassword = `-- name: UpdatePassword :execresult
+UPDATE users SET password = ? WHERE id = ?
+`
+
+type UpdatePasswordParams struct {
+	Password string
+	ID       int32
+}
+
+func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updatePassword, arg.Password, arg.ID)
+}
