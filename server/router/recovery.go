@@ -99,6 +99,8 @@ func (r *Router) RequestRecovery(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
 
+	// TODO: add logic to send recovery url to user
+
 	return ctx.NoContent(http.StatusNoContent)
 }
 
