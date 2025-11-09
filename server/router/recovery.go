@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"wilin.info/api/database/recovery"
+	"wilin.info/api/database/users"
 	"wilin.info/api/server/services"
 )
 
@@ -18,11 +19,27 @@ type RequestRecoveryDTO struct {
 
 type ChangePasswordDTO struct {
 	Password string `json:"password" form:"password"`
+	ID       string `param:"id"`
+}
+
+func validatePassword(p string) error {
+	if len(p) < MIN_PASSWORD_LENGTH {
+		return errors.New(PasswordTooShort)
+	}
+	if len(p) > MAX_PASSWORD_LENGTH {
+		return errors.New(PasswordTooLong)
+	}
+	return nil
 }
 
 var TIME_TO_EXPIRE = time.Minute * 15
 
 var ID_ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func isExpired(t *time.Time) bool {
+	expiration := t.Add(TIME_TO_EXPIRE)
+	return expiration.Before(time.Now())
+}
 
 func (r *Router) createNewRecovery(id string, userID int) error {
 	// verify if one for the user already exists
@@ -81,6 +98,66 @@ func (r *Router) RequestRecovery(ctx echo.Context) error {
 		errJSON := NewErrorJson(ServerError)
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
+
+	return ctx.NoContent(http.StatusNoContent)
+}
+
+func (r *Router) ChangePassword(ctx echo.Context) error {
+	newPasswordDTO := new(ChangePasswordDTO)
+	err := ctx.Bind(newPasswordDTO)
+	if err != nil {
+		errJSON := NewErrorJson(InvalidForm)
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	recovery, err := r.recoveryQueries.ReadByID(r.ctx, newPasswordDTO.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errJSON := NewErrorJson("invalid recovery id")
+			return ctx.JSON(http.StatusNotFound, errJSON)
+		}
+
+		ctx.Logger().Errorf("could not find recovery item: %v\n", err)
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	if isExpired(&recovery.CreatedAt) {
+		ctx.Logger().Infof("recovery id is expired. deleting %v...\n", recovery.ID)
+		_, _ = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
+		errJSON := NewErrorJson("invalid recovery id")
+		return ctx.JSON(http.StatusNotFound, errJSON)
+	}
+
+	err = validatePassword(newPasswordDTO.Password)
+	if err != nil {
+		errJSON := NewErrorJson(err.Error())
+		return ctx.JSON(http.StatusBadRequest, errJSON)
+	}
+
+	passwordHash, err := services.GeneratePasswordHash(newPasswordDTO.Password)
+	if err != nil {
+		ctx.Logger().Errorf("could not generate password hash: %v\n", err)
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	updateParams := users.UpdatePasswordParams{
+		ID:       recovery.UserID,
+		Password: passwordHash,
+	}
+	_, err = r.userQueries.UpdatePassword(r.ctx, updateParams)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errJSON := NewErrorJson("invalid recovery id")
+			return ctx.JSON(http.StatusNotFound, errJSON)
+		}
+
+		errJSON := NewErrorJson(ServerError)
+		return ctx.JSON(http.StatusInternalServerError, errJSON)
+	}
+
+	_, _ = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
 
 	return ctx.NoContent(http.StatusNoContent)
 }

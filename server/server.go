@@ -151,6 +151,7 @@ func New(db *sql.DB) *echo.Echo {
 	server.POST("/refresh", router.HandleRefresh)
 
 	server.POST("/recovery", router.RequestRecovery)
+	server.POST("/recovery/:id", router.ChangePassword)
 
 	return server
 }
