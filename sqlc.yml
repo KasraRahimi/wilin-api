@@ -26,3 +26,11 @@ sql:
       go:
         package: "proposal"
         out: "database/proposal"
+  - engine: "mysql"
+    name: "recovery"
+    queries: "sqlc/recovery/queries.sql"
+    schema: "sqlc/recovery/schema.sql"
+    gen:
+      go:
+        package: "recovery"
+        out: "database/recovery"
