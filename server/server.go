@@ -7,6 +7,7 @@ import (
 
 	"wilin.info/api/database/kalan"
 	"wilin.info/api/database/proposal"
+	"wilin.info/api/database/recovery"
 	"wilin.info/api/database/users"
 	"wilin.info/api/server/router"
 	"wilin.info/api/server/services"
@@ -45,7 +46,14 @@ func New(db *sql.DB) *echo.Echo {
 	kalanQueries := kalan.New(db)
 	usersQueries := users.New(db)
 	proposalQueries := proposal.New(db)
-	router := router.New(context.Background(), kalanQueries, usersQueries, proposalQueries)
+	recoveryQueries := recovery.New(db)
+	router := router.New(
+		context.Background(),
+		kalanQueries,
+		usersQueries,
+		proposalQueries,
+		recoveryQueries,
+	)
 
 	// add preroute middleware
 	services.SetOrigins()
@@ -141,6 +149,8 @@ func New(db *sql.DB) *echo.Echo {
 	server.POST("/login", router.HandleLogin)
 	server.GET("/me", router.GetMe)
 	server.POST("/refresh", router.HandleRefresh)
+
+	server.POST("/recovery", router.RequestRecovery)
 
 	return server
 }

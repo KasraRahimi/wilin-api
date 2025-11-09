@@ -7,6 +7,7 @@ import (
 
 	"wilin.info/api/database/kalan"
 	"wilin.info/api/database/proposal"
+	"wilin.info/api/database/recovery"
 	"wilin.info/api/database/users"
 )
 
@@ -50,6 +51,7 @@ type Router struct {
 	kalanQueries    *kalan.Queries
 	userQueries     *users.Queries
 	proposalQueries *proposal.Queries
+	recoveryQueries *recovery.Queries
 }
 
 func New(
@@ -57,11 +59,13 @@ func New(
 	kalanQueries *kalan.Queries,
 	userQueries *users.Queries,
 	proposalQueries *proposal.Queries,
+	recoveryQueries *recovery.Queries,
 ) *Router {
 	return &Router{
 		ctx:             ctx,
 		kalanQueries:    kalanQueries,
 		userQueries:     userQueries,
 		proposalQueries: proposalQueries,
+		recoveryQueries: recoveryQueries,
 	}
 }
