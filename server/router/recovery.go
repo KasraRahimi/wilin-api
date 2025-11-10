@@ -37,8 +37,7 @@ var TIME_TO_EXPIRE = time.Minute * 15
 var ID_ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 func isExpired(t *time.Time) bool {
-	expiration := t.Add(TIME_TO_EXPIRE)
-	return expiration.Before(time.Now())
+	return t.Before(time.Now())
 }
 
 func (r *Router) createNewRecovery(id string, userID int) error {
@@ -52,9 +51,11 @@ func (r *Router) createNewRecovery(id string, userID int) error {
 		_, _ = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
 	}
 
+	expiredAt := time.Now().Add(TIME_TO_EXPIRE)
 	createParams := recovery.CreateParams{
-		ID:     id,
-		UserID: int32(userID),
+		ID:        id,
+		UserID:    int32(userID),
+		ExpiredAt: expiredAt,
 	}
 	_, err = r.recoveryQueries.Create(r.ctx, createParams)
 	return err
@@ -124,7 +125,7 @@ func (r *Router) ChangePassword(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
 
-	if isExpired(&recovery.CreatedAt) {
+	if isExpired(&recovery.ExpiredAt) {
 		ctx.Logger().Infof("recovery id is expired. deleting %v...\n", recovery.ID)
 		_, _ = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
 		errJSON := NewErrorJson("invalid recovery id")
