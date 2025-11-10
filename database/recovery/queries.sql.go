@@ -8,19 +8,21 @@ package recovery
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const create = `-- name: Create :execresult
-INSERT INTO recoveries (id, user_id) VALUES (?, ?)
+INSERT INTO recoveries (id, user_id, expired_at) VALUES (?, ?, ?)
 `
 
 type CreateParams struct {
-	ID     string
-	UserID int32
+	ID        string
+	UserID    int32
+	ExpiredAt time.Time
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, create, arg.ID, arg.UserID)
+	return q.db.ExecContext(ctx, create, arg.ID, arg.UserID, arg.ExpiredAt)
 }
 
 const deleteByID = `-- name: DeleteByID :execresult
@@ -32,18 +34,18 @@ func (q *Queries) DeleteByID(ctx context.Context, id string) (sql.Result, error)
 }
 
 const readByID = `-- name: ReadByID :one
-SELECT id, user_id, created_at FROM recoveries WHERE id = ? LIMIT 1
+SELECT id, user_id, expired_at FROM recoveries WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) ReadByID(ctx context.Context, id string) (Recovery, error) {
 	row := q.db.QueryRowContext(ctx, readByID, id)
 	var i Recovery
-	err := row.Scan(&i.ID, &i.UserID, &i.CreatedAt)
+	err := row.Scan(&i.ID, &i.UserID, &i.ExpiredAt)
 	return i, err
 }
 
 const readByUserID = `-- name: ReadByUserID :many
-SELECT id, user_id, created_at FROM recoveries where user_id = ?
+SELECT id, user_id, expired_at FROM recoveries where user_id = ?
 `
 
 func (q *Queries) ReadByUserID(ctx context.Context, userID int32) ([]Recovery, error) {
@@ -55,7 +57,7 @@ func (q *Queries) ReadByUserID(ctx context.Context, userID int32) ([]Recovery, e
 	var items []Recovery
 	for rows.Next() {
 		var i Recovery
-		if err := rows.Scan(&i.ID, &i.UserID, &i.CreatedAt); err != nil {
+		if err := rows.Scan(&i.ID, &i.UserID, &i.ExpiredAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

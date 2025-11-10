@@ -11,5 +11,5 @@ import (
 type Recovery struct {
 	ID        string
 	UserID    int32
-	CreatedAt time.Time
+	ExpiredAt time.Time
 }

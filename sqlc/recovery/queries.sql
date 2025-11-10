@@ -1,5 +1,5 @@
 -- name: Create :execresult
-INSERT INTO recoveries (id, user_id) VALUES (?, ?);
+INSERT INTO recoveries (id, user_id, expired_at) VALUES (?, ?, ?);
 
 -- name: ReadByID :one
 SELECT * FROM recoveries WHERE id = ? LIMIT 1;
