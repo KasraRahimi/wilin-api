@@ -40,7 +40,7 @@ func isExpired(t *time.Time) bool {
 	return t.Before(time.Now())
 }
 
-func (r *Router) createNewRecovery(id string, userID int) error {
+func (r *Router) createNewRecovery(ctx echo.Context, id string, userID int) error {
 	// verify if one for the user already exists
 	recoveries, err := r.recoveryQueries.ReadByUserID(r.ctx, int32(userID))
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -48,7 +48,8 @@ func (r *Router) createNewRecovery(id string, userID int) error {
 	}
 
 	for _, recovery := range recoveries {
-		_, _ = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
+		_, err = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
+		ctx.Logger().Errorf("failed to delete recoveries: %v\n", err)
 	}
 
 	expiredAt := time.Now().Add(TIME_TO_EXPIRE)
@@ -92,7 +93,7 @@ func (r *Router) RequestRecovery(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
 
-	err = r.createNewRecovery(recoveryID, int(user.ID))
+	err = r.createNewRecovery(ctx, recoveryID, int(user.ID))
 
 	if err != nil {
 		ctx.Logger().Errorf("could not generate recovery: %v", err)
