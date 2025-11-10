@@ -49,7 +49,9 @@ func (r *Router) createNewRecovery(ctx echo.Context, id string, userID int) erro
 
 	for _, recovery := range recoveries {
 		_, err = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
-		ctx.Logger().Errorf("failed to delete recoveries: %v\n", err)
+		if err != nil {
+			ctx.Logger().Errorf("failed to delete recoveries: %v\n", err)
+		}
 	}
 
 	expiredAt := time.Now().Add(TIME_TO_EXPIRE)
