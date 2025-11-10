@@ -160,7 +160,10 @@ func (r *Router) ChangePassword(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, errJSON)
 	}
 
-	_, _ = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
+	_, err = r.recoveryQueries.DeleteByID(r.ctx, recovery.ID)
+	if err != nil {
+		ctx.Logger().Errorf("failed to delete recovery item: %v\n", err)
+	}
 
 	return ctx.NoContent(http.StatusNoContent)
 }
